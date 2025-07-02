@@ -1,0 +1,141 @@
+version: '3.8'
+
+services:
+  {{#if_postgresql}}
+  postgres:
+    image: postgres:15
+    container_name: scalardb-postgres
+    environment:
+      POSTGRES_DB: {{DB_NAME}}
+      POSTGRES_USER: {{DB_USERNAME}}
+      POSTGRES_PASSWORD: {{DB_PASSWORD}}
+    ports:
+      - "{{DB_PORT}}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+  {{/if_postgresql}}
+
+  {{#if_mysql}}
+  mysql:
+    image: mysql:8.0
+    container_name: scalardb-mysql
+    environment:
+      MYSQL_DATABASE: {{DB_NAME}}
+      MYSQL_USER: {{DB_USERNAME}}
+      MYSQL_PASSWORD: {{DB_PASSWORD}}
+      MYSQL_ROOT_PASSWORD: {{DB_ROOT_PASSWORD}}
+    ports:
+      - "{{DB_PORT}}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: unless-stopped
+  {{/if_mysql}}
+
+  {{#if_cassandra}}
+  cassandra:
+    image: cassandra:4.0
+    container_name: scalardb-cassandra
+    environment:
+      CASSANDRA_CLUSTER_NAME: "ScalarDB Cluster"
+      CASSANDRA_DC: "datacenter1"
+      CASSANDRA_RACK: "rack1"
+    ports:
+      - "{{CASSANDRA_PORT}}:9042"
+      - "7000:7000"
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    restart: unless-stopped
+  {{/if_cassandra}}
+
+  {{#if_dynamodb_local}}
+  dynamodb-local:
+    image: amazon/dynamodb-local
+    container_name: scalardb-dynamodb
+    ports:
+      - "{{DYNAMODB_PORT}}:8000"
+    command: -jar DynamoDBLocal.jar -sharedDb -optimizeDbBeforeStartup
+    volumes:
+      - dynamodb_data:/home/dynamodblocal/data
+    restart: unless-stopped
+  {{/if_dynamodb_local}}
+
+  {{#if SCALARDB_SERVER}}
+  scalardb-server:
+    image: ghcr.io/scalar-labs/scalardb-server:{{SCALARDB_VERSION}}
+    container_name: scalardb-server
+    ports:
+      - "{{SCALARDB_SERVER_PORT}}:60051"
+      - "{{SCALARDB_METRICS_PORT}}:8080"
+    volumes:
+      - ./database.properties:/scalardb/database.properties
+      {{#if SCHEMA_FILE}}
+      - ./{{SCHEMA_FILE}}:/scalardb/schema.json
+      {{/if}}
+    environment:
+      SCALAR_DB_CONFIG_FILE: /scalardb/database.properties
+    depends_on:
+      {{#if_postgresql}}
+      - postgres
+      {{/if_postgresql}}
+      {{#if_mysql}}
+      - mysql
+      {{/if_mysql}}
+      {{#if_cassandra}}
+      - cassandra
+      {{/if_cassandra}}
+      {{#if_dynamodb_local}}
+      - dynamodb-local
+      {{/if_dynamodb_local}}
+    restart: unless-stopped
+  {{/if}}
+
+  {{#if MONITORING_ENABLED}}
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: scalardb-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: scalardb-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: {{GRAFANA_PASSWORD}}
+    volumes:
+      - grafana_data:/var/lib/grafana
+    restart: unless-stopped
+  {{/if}}
+
+volumes:
+  {{#if_postgresql}}
+  postgres_data:
+  {{/if_postgresql}}
+  {{#if_mysql}}
+  mysql_data:
+  {{/if_mysql}}
+  {{#if_cassandra}}
+  cassandra_data:
+  {{/if_cassandra}}
+  {{#if_dynamodb_local}}
+  dynamodb_data:
+  {{/if_dynamodb_local}}
+  {{#if MONITORING_ENABLED}}
+  prometheus_data:
+  grafana_data:
+  {{/if}}
+
+networks:
+  default:
+    name: scalardb-network

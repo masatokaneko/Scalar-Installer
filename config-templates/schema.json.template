@@ -1,0 +1,30 @@
+{
+  "{{TABLE_NAME}}": {
+    "transaction": {{TRANSACTION_ENABLED}},
+    "partition-key": [
+      {{#each PARTITION_KEYS}}
+      "{{this}}"{{#unless @last}},{{/unless}}
+      {{/each}}
+    ],
+    {{#if CLUSTERING_KEYS}}
+    "clustering-key": [
+      {{#each CLUSTERING_KEYS}}
+      "{{this}}"{{#unless @last}},{{/unless}}
+      {{/each}}
+    ],
+    {{/if}}
+    "columns": {
+      {{#each COLUMNS}}
+      "{{name}}": "{{type}}"{{#unless @last}},{{/unless}}
+      {{/each}}
+    },
+    {{#if SECONDARY_INDEXES}}
+    "secondary-index": [
+      {{#each SECONDARY_INDEXES}}
+      "{{this}}"{{#unless @last}},{{/unless}}
+      {{/each}}
+    ],
+    {{/if}}
+    "compaction-strategy": "{{COMPACTION_STRATEGY}}"
+  }
+}
