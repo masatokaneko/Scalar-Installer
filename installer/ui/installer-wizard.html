@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScalarDB/ScalarDL インストールウィザード</title>
+    <link rel="stylesheet" href="installer-styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🗃️</div>
+            <h1>ScalarDB/ScalarDL インストールウィザード</h1>
+            <div class="progress-bar">
+                <div class="progress-step active" data-step="1">
+                    <span class="step-number">1</span>
+                    <span class="step-label">ウェルカム</span>
+                </div>
+                <div class="progress-step" data-step="2">
+                    <span class="step-number">2</span>
+                    <span class="step-label">環境チェック</span>
+                </div>
+                <div class="progress-step" data-step="3">
+                    <span class="step-number">3</span>
+                    <span class="step-label">DB選択</span>
+                </div>
+                <div class="progress-step" data-step="4">
+                    <span class="step-number">4</span>
+                    <span class="step-label">設定</span>
+                </div>
+                <div class="progress-step" data-step="5">
+                    <span class="step-number">5</span>
+                    <span class="step-label">インストール</span>
+                </div>
+                <div class="progress-step" data-step="6">
+                    <span class="step-number">6</span>
+                    <span class="step-label">完了</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- ステップ1: ウェルカム画面 -->
+            <div class="step-content active" id="step-1">
+                <div class="step-header">
+                    <h2>ScalarDB/ScalarDL インストールウィザードへようこそ</h2>
+                    <p>このウィザードでは、ScalarDB または ScalarDL の完全なセットアップを行います。</p>
+                </div>
+                
+                <div class="option-grid">
+                    <div class="option-card" data-product="scalardb">
+                        <div class="option-icon">🗃️</div>
+                        <h3>ScalarDB</h3>
+                        <p>分散データベース環境でのACIDトランザクション</p>
+                        <ul>
+                            <li>複数DBにまたがるトランザクション</li>
+                            <li>ACID保証</li>
+                            <li>高い可用性</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="option-card" data-product="scalardl">
+                        <div class="option-icon">🔒</div>
+                        <h3>ScalarDL</h3>
+                        <p>ビザンチン障害検出機能付きミドルウェア</p>
+                        <ul>
+                            <li>データ改ざん検出</li>
+                            <li>監査証跡</li>
+                            <li>セキュリティ強化</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="install-type-section">
+                    <h3>インストールタイプ</h3>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="installType" value="development" checked>
+                            <span class="radio-custom"></span>
+                            <div class="radio-content">
+                                <strong>開発環境</strong>
+                                <p>ローカル開発とテスト用</p>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="installType" value="production">
+                            <span class="radio-custom"></span>
+                            <div class="radio-content">
+                                <strong>本番環境</strong>
+                                <p>高可用性とパフォーマンス重視</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ステップ2: 環境チェック画面 -->
+            <div class="step-content" id="step-2">
+                <div class="step-header">
+                    <h2>環境チェック</h2>
+                    <p>システムの要件を確認し、必要な依存関係をインストールします。</p>
+                </div>
+                
+                <div class="check-list">
+                    <div class="check-item" id="java-check">
+                        <div class="check-icon">⏳</div>
+                        <div class="check-content">
+                            <h4>Java環境</h4>
+                            <p>OpenJDK 8, 11, 17, または 21 が必要です</p>
+                            <div class="check-details"></div>
+                        </div>
+                        <div class="check-actions">
+                            <button class="btn-small" onclick="checkJava()">チェック</button>
+                            <button class="btn-small btn-primary" onclick="installJava()" style="display:none;">インストール</button>
+                        </div>
+                    </div>
+                    
+                    <div class="check-item" id="docker-check">
+                        <div class="check-icon">⏳</div>
+                        <div class="check-content">
+                            <h4>Docker</h4>
+                            <p>コンテナ環境用（オプション）</p>
+                            <div class="check-details"></div>
+                        </div>
+                        <div class="check-actions">
+                            <button class="btn-small" onclick="checkDocker()">チェック</button>
+                        </div>
+                    </div>
+                    
+                    <div class="check-item" id="maven-check">
+                        <div class="check-icon">⏳</div>
+                        <div class="check-content">
+                            <h4>Maven/Gradle</h4>
+                            <p>ビルドツール（プロジェクト統合用）</p>
+                            <div class="check-details"></div>
+                        </div>
+                        <div class="check-actions">
+                            <button class="btn-small" onclick="checkBuildTools()">チェック</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="environment-summary">
+                    <h3>システム情報</h3>
+                    <div class="system-info">
+                        <div class="info-item">
+                            <strong>OS:</strong> <span id="os-info">検出中...</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>アーキテクチャ:</strong> <span id="arch-info">検出中...</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>メモリ:</strong> <span id="memory-info">検出中...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ステップ3: データベース選択画面 -->
+            <div class="step-content" id="step-3">
+                <div class="step-header">
+                    <h2>データベース選択</h2>
+                    <p>ScalarDBが使用するバックエンドデータベースを選択してください。</p>
+                </div>
+                
+                <div class="database-grid">
+                    <div class="db-card" data-db="postgresql">
+                        <div class="db-icon">🐘</div>
+                        <h3>PostgreSQL</h3>
+                        <p>オープンソースのリレーショナルデータベース</p>
+                        <div class="db-features">
+                            <span class="feature-tag">ACID</span>
+                            <span class="feature-tag">SQL</span>
+                            <span class="feature-tag">成熟</span>
+                        </div>
+                    </div>
+                    
+                    <div class="db-card" data-db="mysql">
+                        <div class="db-icon">🐬</div>
+                        <h3>MySQL</h3>
+                        <p>世界で最も人気のあるオープンソースデータベース</p>
+                        <div class="db-features">
+                            <span class="feature-tag">高速</span>
+                            <span class="feature-tag">SQL</span>
+                            <span class="feature-tag">簡単</span>
+                        </div>
+                    </div>
+                    
+                    <div class="db-card" data-db="cassandra">
+                        <div class="db-icon">⚡</div>
+                        <h3>Cassandra</h3>
+                        <p>高可用性でスケーラブルなNoSQLデータベース</p>
+                        <div class="db-features">
+                            <span class="feature-tag">分散</span>
+                            <span class="feature-tag">高可用性</span>
+                            <span class="feature-tag">NoSQL</span>
+                        </div>
+                    </div>
+                    
+                    <div class="db-card" data-db="dynamodb">
+                        <div class="db-icon">☁️</div>
+                        <h3>DynamoDB</h3>
+                        <p>AWSのマネージドNoSQLデータベース</p>
+                        <div class="db-features">
+                            <span class="feature-tag">サーバーレス</span>
+                            <span class="feature-tag">AWS</span>
+                            <span class="feature-tag">自動スケール</span>
+                        </div>
+                    </div>
+                    
+                    <div class="db-card" data-db="cosmos">
+                        <div class="db-icon">🌌</div>
+                        <h3>Cosmos DB</h3>
+                        <p>Microsoft Azureのマルチモデルデータベース</p>
+                        <div class="db-features">
+                            <span class="feature-tag">マルチモデル</span>
+                            <span class="feature-tag">Azure</span>
+                            <span class="feature-tag">グローバル</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="deployment-options">
+                    <h3>デプロイメント方法</h3>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="deployment" value="local" checked>
+                            <span class="radio-custom"></span>
+                            <div class="radio-content">
+                                <strong>ローカルインストール</strong>
+                                <p>システムに直接インストール</p>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="deployment" value="docker">
+                            <span class="radio-custom"></span>
+                            <div class="radio-content">
+                                <strong>Docker</strong>
+                                <p>コンテナ環境で実行</p>
+                            </div>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="deployment" value="kubernetes">
+                            <span class="radio-custom"></span>
+                            <div class="radio-content">
+                                <strong>Kubernetes</strong>
+                                <p>Kubernetesクラスターで実行</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ステップ4: 設定画面 -->
+            <div class="step-content" id="step-4">
+                <div class="step-header">
+                    <h2>データベース設定</h2>
+                    <p>選択したデータベースの接続情報を入力してください。</p>
+                </div>
+                
+                <div class="config-form" id="config-form">
+                    <!-- 動的に生成される設定フォーム -->
+                </div>
+                
+                <div class="advanced-settings">
+                    <details>
+                        <summary>詳細設定</summary>
+                        <div class="advanced-form">
+                            <div class="form-group">
+                                <label>分離レベル</label>
+                                <select name="isolationLevel">
+                                    <option value="SNAPSHOT">SNAPSHOT</option>
+                                    <option value="SERIALIZABLE">SERIALIZABLE</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>シリアライズ戦略</label>
+                                <select name="serializableStrategy">
+                                    <option value="EXTRA_READ">EXTRA_READ</option>
+                                    <option value="EXTRA_WRITE">EXTRA_WRITE</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group checkbox-group">
+                                <label>
+                                    <input type="checkbox" name="sqlEnabled">
+                                    SQL インターフェースを有効にする
+                                </label>
+                            </div>
+                            
+                            <div class="form-group checkbox-group">
+                                <label>
+                                    <input type="checkbox" name="metricsEnabled">
+                                    メトリクス収集を有効にする
+                                </label>
+                            </div>
+                        </div>
+                    </details>
+                </div>
+                
+                <div class="test-connection">
+                    <button class="btn-secondary" onclick="testConnection()">接続テスト</button>
+                    <div class="test-result" id="test-result"></div>
+                </div>
+            </div>
+
+            <!-- ステップ5: インストール実行画面 -->
+            <div class="step-content" id="step-5">
+                <div class="step-header">
+                    <h2>インストール実行</h2>
+                    <p>ScalarDBのインストールを開始します。</p>
+                </div>
+                
+                <div class="install-summary">
+                    <h3>インストール概要</h3>
+                    <div class="summary-content" id="install-summary">
+                        <!-- 動的に生成される概要 -->
+                    </div>
+                </div>
+                
+                <div class="install-progress">
+                    <div class="progress-container">
+                        <div class="progress-bar-install">
+                            <div class="progress-fill" id="progress-fill"></div>
+                        </div>
+                        <div class="progress-text" id="progress-text">準備中...</div>
+                    </div>
+                    
+                    <div class="install-log">
+                        <h4>インストールログ</h4>
+                        <div class="log-container" id="log-container">
+                            <div class="log-entry">インストールの準備をしています...</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="install-actions">
+                    <button class="btn-primary btn-large" onclick="startInstallation()" id="start-install-btn">
+                        インストール開始
+                    </button>
+                    <button class="btn-secondary" onclick="cancelInstallation()" id="cancel-install-btn" style="display:none;">
+                        キャンセル
+                    </button>
+                </div>
+            </div>
+
+            <!-- ステップ6: 完了画面 -->
+            <div class="step-content" id="step-6">
+                <div class="step-header success">
+                    <div class="success-icon">🎉</div>
+                    <h2>インストール完了！</h2>
+                    <p>ScalarDBが正常にインストールされました。</p>
+                </div>
+                
+                <div class="completion-info">
+                    <div class="info-card">
+                        <h4>インストール詳細</h4>
+                        <div class="install-details" id="install-details">
+                            <!-- 動的に生成される詳細情報 -->
+                        </div>
+                    </div>
+                    
+                    <div class="info-card">
+                        <h4>次のステップ</h4>
+                        <ul class="next-steps">
+                            <li>サンプルアプリケーションを実行</li>
+                            <li>ドキュメントを参照</li>
+                            <li>ダッシュボードでシステムを監視</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="quick-actions">
+                    <button class="btn-primary" onclick="openDashboard()">
+                        📊 ダッシュボードを開く
+                    </button>
+                    <button class="btn-secondary" onclick="viewDocumentation()">
+                        📚 ドキュメント
+                    </button>
+                    <button class="btn-secondary" onclick="runSample()">
+                        🚀 サンプル実行
+                    </button>
+                    <button class="btn-secondary" onclick="generateConfig()">
+                        ⚙️ 設定ファイル生成
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="navigation">
+                <button class="btn-secondary" onclick="previousStep()" id="prev-btn" disabled>
+                    ← 前へ
+                </button>
+                <button class="btn-primary" onclick="nextStep()" id="next-btn">
+                    次へ →
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="installer-wizard.js"></script>
+</body>
+</html>

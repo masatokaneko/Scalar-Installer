@@ -1,0 +1,807 @@
+/* ScalarDB/ScalarDL インストールウィザード スタイル */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: #2d3748;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    border-radius: 20px;
+    min-height: 100vh;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    display: flex;
+    flex-direction: column;
+}
+
+/* ヘッダー */
+.header {
+    background: linear-gradient(135deg, #1a365d 0%, #2d3748 100%);
+    color: white;
+    padding: 40px;
+    text-align: center;
+    border-radius: 20px 20px 0 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+}
+
+.header-content {
+    position: relative;
+    z-index: 1;
+}
+
+.logo {
+    font-size: 3rem;
+    margin-bottom: 20px;
+}
+
+.header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    letter-spacing: -0.025em;
+}
+
+/* プログレスバー */
+.progress-bar {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 30px;
+    position: relative;
+}
+
+.progress-bar::before {
+    content: '';
+    position: absolute;
+    top: 15px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.3);
+    z-index: 1;
+}
+
+.progress-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+    min-width: 120px;
+}
+
+.step-number {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+}
+
+.progress-step.active .step-number {
+    background: #38a169;
+    color: white;
+}
+
+.progress-step.completed .step-number {
+    background: #38a169;
+    color: white;
+}
+
+.step-label {
+    font-size: 0.9rem;
+    text-align: center;
+    opacity: 0.8;
+}
+
+.progress-step.active .step-label {
+    opacity: 1;
+    font-weight: 600;
+}
+
+/* コンテンツ */
+.content {
+    flex: 1;
+    padding: 40px;
+}
+
+.step-content {
+    display: none;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.step-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.step-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.step-header h2 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: #1a365d;
+}
+
+.step-header p {
+    font-size: 1.1rem;
+    color: #4a5568;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.step-header.success {
+    color: #38a169;
+}
+
+.success-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+}
+
+/* オプションカード */
+.option-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+.option-card {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    border: 3px solid #e2e8f0;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    text-align: center;
+}
+
+.option-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+    border-color: #3182ce;
+}
+
+.option-card.selected {
+    border-color: #38a169;
+    background: linear-gradient(135deg, #c6f6d5 0%, #f0fff4 100%);
+}
+
+.option-icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+}
+
+.option-card h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: #1a365d;
+}
+
+.option-card p {
+    color: #4a5568;
+    margin-bottom: 16px;
+}
+
+.option-card ul {
+    list-style: none;
+    text-align: left;
+}
+
+.option-card li {
+    padding: 4px 0;
+    color: #2d3748;
+}
+
+.option-card li::before {
+    content: '✓';
+    color: #38a169;
+    font-weight: bold;
+    margin-right: 8px;
+}
+
+/* データベースカード */
+.database-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.db-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: 2px solid #e2e8f0;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    text-align: center;
+}
+
+.db-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    border-color: #3182ce;
+}
+
+.db-card.selected {
+    border-color: #38a169;
+    background: linear-gradient(135deg, #c6f6d5 0%, #f0fff4 100%);
+}
+
+.db-icon {
+    font-size: 2.5rem;
+    margin-bottom: 12px;
+}
+
+.db-card h3 {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #1a365d;
+}
+
+.db-card p {
+    color: #4a5568;
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+}
+
+.db-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+}
+
+.feature-tag {
+    background: #e2e8f0;
+    color: #2d3748;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* ラジオボタン */
+.radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.radio-option:hover {
+    border-color: #3182ce;
+}
+
+.radio-option input[type="radio"] {
+    display: none;
+}
+
+.radio-custom {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #cbd5e0;
+    border-radius: 50%;
+    margin-right: 16px;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.radio-option input[type="radio"]:checked + .radio-custom {
+    border-color: #38a169;
+    background: #38a169;
+}
+
+.radio-option input[type="radio"]:checked + .radio-custom::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    background: white;
+    border-radius: 50%;
+}
+
+.radio-content strong {
+    display: block;
+    color: #1a365d;
+    margin-bottom: 4px;
+}
+
+.radio-content p {
+    color: #4a5568;
+    font-size: 0.9rem;
+}
+
+/* チェックリスト */
+.check-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.check-item {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: 2px solid #e2e8f0;
+}
+
+.check-icon {
+    font-size: 1.5rem;
+    margin-right: 16px;
+    min-width: 24px;
+}
+
+.check-content {
+    flex: 1;
+}
+
+.check-content h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #1a365d;
+}
+
+.check-content p {
+    color: #4a5568;
+    font-size: 0.9rem;
+}
+
+.check-details {
+    margin-top: 8px;
+    font-size: 0.8rem;
+    color: #718096;
+}
+
+.check-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.check-item.success {
+    border-color: #38a169;
+    background: linear-gradient(135deg, #c6f6d5 0%, #f0fff4 100%);
+}
+
+.check-item.success .check-icon {
+    color: #38a169;
+}
+
+.check-item.error {
+    border-color: #e53e3e;
+    background: linear-gradient(135deg, #fed7d7 0%, #fef2f2 100%);
+}
+
+.check-item.error .check-icon {
+    color: #e53e3e;
+}
+
+/* フォーム */
+.config-form {
+    background: white;
+    padding: 32px;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #1a365d;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #3182ce;
+}
+
+.form-group.checkbox-group {
+    display: flex;
+    align-items: center;
+}
+
+.form-group.checkbox-group input[type="checkbox"] {
+    width: auto;
+    margin-right: 8px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+/* ボタン */
+.btn-primary,
+.btn-secondary,
+.btn-small {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #3182ce 0%, #2b6cb0 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(49, 130, 206, 0.3);
+}
+
+.btn-secondary {
+    background: #e2e8f0;
+    color: #2d3748;
+}
+
+.btn-secondary:hover {
+    background: #cbd5e0;
+    transform: translateY(-1px);
+}
+
+.btn-small {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+}
+
+.btn-large {
+    padding: 16px 32px;
+    font-size: 1.1rem;
+}
+
+.btn-primary:disabled,
+.btn-secondary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* インストールプログレス */
+.install-progress {
+    background: white;
+    padding: 32px;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+.progress-container {
+    margin-bottom: 30px;
+}
+
+.progress-bar-install {
+    width: 100%;
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #38a169, #68d391);
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    text-align: center;
+    font-weight: 600;
+    color: #1a365d;
+}
+
+.install-log {
+    margin-top: 20px;
+}
+
+.install-log h4 {
+    margin-bottom: 12px;
+    color: #1a365d;
+}
+
+.log-container {
+    background: #1a202c;
+    color: #68d391;
+    padding: 16px;
+    border-radius: 8px;
+    font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+    font-size: 0.9rem;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.log-entry {
+    margin-bottom: 4px;
+}
+
+.log-entry.error {
+    color: #fc8181;
+}
+
+.log-entry.warning {
+    color: #f6e05e;
+}
+
+/* 情報カード */
+.info-card,
+.summary-content {
+    background: white;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.info-card h4 {
+    color: #1a365d;
+    margin-bottom: 16px;
+    font-size: 1.2rem;
+}
+
+.completion-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.install-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.detail-item:last-child {
+    border-bottom: none;
+}
+
+.next-steps {
+    list-style: none;
+    padding-left: 0;
+}
+
+.next-steps li {
+    padding: 8px 0;
+    color: #2d3748;
+}
+
+.next-steps li::before {
+    content: '→';
+    color: #38a169;
+    font-weight: bold;
+    margin-right: 8px;
+}
+
+.quick-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* システム情報 */
+.system-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.info-item {
+    padding: 12px;
+    background: #f7fafc;
+    border-radius: 8px;
+}
+
+/* 詳細設定 */
+.advanced-settings {
+    margin-bottom: 30px;
+}
+
+.advanced-settings summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: #1a365d;
+    padding: 16px;
+    background: #f7fafc;
+    border-radius: 8px;
+    margin-bottom: 16px;
+}
+
+.advanced-form {
+    background: white;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* テスト接続 */
+.test-connection {
+    text-align: center;
+}
+
+.test-result {
+    margin-top: 16px;
+    padding: 16px;
+    border-radius: 8px;
+    display: none;
+}
+
+.test-result.success {
+    background: #f0fff4;
+    color: #22543d;
+    border: 1px solid #9ae6b4;
+}
+
+.test-result.error {
+    background: #fed7d7;
+    color: #742a2a;
+    border: 1px solid #fc8181;
+}
+
+/* フッター */
+.footer {
+    background: #f7fafc;
+    padding: 20px 40px;
+    border-radius: 0 0 20px 20px;
+}
+
+.navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* レスポンシブ */
+@media (max-width: 768px) {
+    .container {
+        margin: 0;
+        border-radius: 0;
+        min-height: 100vh;
+    }
+    
+    .header {
+        border-radius: 0;
+        padding: 20px;
+    }
+    
+    .header h1 {
+        font-size: 1.8rem;
+    }
+    
+    .content {
+        padding: 20px;
+    }
+    
+    .option-grid,
+    .completion-info {
+        grid-template-columns: 1fr;
+    }
+    
+    .database-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .progress-bar {
+        overflow-x: auto;
+        padding-bottom: 10px;
+    }
+    
+    .progress-step {
+        min-width: 80px;
+    }
+    
+    .step-label {
+        font-size: 0.8rem;
+    }
+    
+    .navigation {
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    .quick-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+}
