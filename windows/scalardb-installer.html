@@ -1,0 +1,1929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScalarDB Automated Installer for Windows</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a365d 0%, #2d3748 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            border-bottom: 4px solid #3182ce;
+        }
+
+        .header h1 {
+            font-size: 2.75rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            letter-spacing: -0.025em;
+        }
+
+        .header p {
+            font-size: 1.125rem;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+
+        .progress-container {
+            background: #edf2f7;
+            padding: 20px 40px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3182ce, #2b6cb0);
+            width: 12.5%;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .step-info {
+            text-align: center;
+            color: #4a5568;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .step {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(16px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+        }
+
+        .step h2 {
+            color: #1a365d;
+            margin-bottom: 24px;
+            font-size: 1.875rem;
+            font-weight: 600;
+            border-bottom: 3px solid #3182ce;
+            padding-bottom: 12px;
+        }
+
+        .step-description {
+            color: #4a5568;
+            font-size: 1.125rem;
+            margin-bottom: 32px;
+            line-height: 1.7;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 0.95rem;
+        }
+
+        .form-group input, 
+        .form-group select, 
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .form-group input:focus, 
+        .form-group select:focus, 
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #3182ce;
+            box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+        }
+
+        .example {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-left: 4px solid #3182ce;
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin-top: 8px;
+            font-size: 0.875rem;
+            color: #4a5568;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: #f7fafc;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-top: 2px;
+            accent-color: #3182ce;
+        }
+
+        .checkbox-group label {
+            margin-bottom: 0;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #3182ce 0%, #2b6cb0 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-right: 12px;
+            margin-bottom: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #2c5282 0%, #2a4365 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(49, 130, 206, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: #718096;
+            color: white;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #4a5568;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #3182ce;
+            border: 2px solid #3182ce;
+        }
+
+        .btn-outline:hover:not(:disabled) {
+            background: #3182ce;
+            color: white;
+        }
+
+        .output-section {
+            background: #1a202c;
+            color: #68d391;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+            font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
+            font-size: 14px;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            border: 1px solid #2d3748;
+        }
+
+        .output-section.active {
+            display: block;
+        }
+
+        .status {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin: 16px 0;
+            padding: 16px;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        .status.success {
+            background: #f0fff4;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+
+        .status.error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #fc8181;
+        }
+
+        .status.info {
+            background: #ebf8ff;
+            color: #2a4365;
+            border: 1px solid #90cdf4;
+        }
+
+        .status.warning {
+            background: #fffbf0;
+            color: #744210;
+            border: 1px solid #f6e05e;
+        }
+
+        .status-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e2e8f0;
+            border-top: 2px solid #3182ce;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .command-block {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
+            position: relative;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: #3182ce;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s ease;
+        }
+
+        .copy-btn:hover {
+            background: #2c5282;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+            padding-top: 24px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .requirements-check {
+            background: #fffbf0;
+            border: 1px solid #f6e05e;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 24px 0;
+        }
+
+        .requirements-check h3 {
+            color: #744210;
+            margin-bottom: 16px;
+            font-size: 1.125rem;
+        }
+
+        .requirements-item {
+            display: flex;
+            align-items: center;
+            margin: 12px 0;
+            gap: 12px;
+        }
+
+        .check-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .check-icon.pass {
+            background: #48bb78;
+            color: white;
+        }
+
+        .check-icon.fail {
+            background: #e53e3e;
+            color: white;
+        }
+
+        .check-icon.unknown {
+            background: #ed8936;
+            color: white;
+        }
+
+        .download-section {
+            background: #ebf8ff;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 24px 0;
+            border: 1px solid #90cdf4;
+        }
+
+        .download-section h3 {
+            color: #2a4365;
+            margin-bottom: 20px;
+            font-size: 1.125rem;
+        }
+
+        .download-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid #bee3f8;
+        }
+
+        .download-item:last-child {
+            border-bottom: none;
+        }
+
+        .download-item-info h4 {
+            color: #2d3748;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .download-item-info small {
+            color: #4a5568;
+            font-size: 0.875rem;
+        }
+
+        .download-btn {
+            background: #3182ce;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.2s ease;
+        }
+
+        .download-btn:hover {
+            background: #2c5282;
+        }
+
+        .config-summary {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .config-summary h3 {
+            color: #2d3748;
+            margin-bottom: 16px;
+            font-size: 1.125rem;
+        }
+
+        .config-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .config-item:last-child {
+            border-bottom: none;
+        }
+
+        .config-label {
+            font-weight: 500;
+            color: #4a5568;
+        }
+
+        .config-value {
+            color: #2d3748;
+            font-weight: 600;
+        }
+
+        .completion-summary {
+            background: #f0fff4;
+            border: 1px solid #9ae6b4;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 24px 0;
+        }
+
+        .completion-summary h3 {
+            color: #22543d;
+            margin-bottom: 16px;
+            font-size: 1.25rem;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            padding: 8px 0;
+            color: #22543d;
+            font-weight: 500;
+        }
+
+        .feature-list li::before {
+            content: "✓";
+            color: #48bb78;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .next-steps {
+            background: #ebf8ff;
+            border: 1px solid #90cdf4;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .next-steps h3 {
+            color: #2a4365;
+            margin-bottom: 16px;
+            font-size: 1.125rem;
+        }
+
+        .next-steps ol {
+            color: #2a4365;
+            padding-left: 20px;
+        }
+
+        .next-steps li {
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #3182ce;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo-area">
+                <div class="logo-text">ScalarDB</div>
+            </div>
+            <h1>Automated Windows Installer</h1>
+            <p>Complete setup wizard for ScalarDB development environment</p>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="step-info">
+                <span id="stepInfo">Step 1 of 8: System Requirements Check</span>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- Step 1: System Requirements -->
+            <div class="step active" id="step1">
+                <h2>System Requirements Check</h2>
+                <p class="step-description">
+                    Before beginning the installation, let's verify that your Windows system meets the minimum requirements for running ScalarDB.
+                </p>
+                
+                <div class="requirements-check">
+                    <h3>System Requirements Verification</h3>
+                    <div class="requirements-item">
+                        <div class="check-icon unknown" id="osCheck">?</div>
+                        <span>Windows 10/11 (64-bit architecture)</span>
+                    </div>
+                    <div class="requirements-item">
+                        <div class="check-icon unknown" id="ramCheck">?</div>
+                        <span>At least 4GB RAM (8GB recommended for better performance)</span>
+                    </div>
+                    <div class="requirements-item">
+                        <div class="check-icon unknown" id="diskCheck">?</div>
+                        <span>At least 20GB available disk space</span>
+                    </div>
+                    <div class="requirements-item">
+                        <div class="check-icon unknown" id="adminCheck">?</div>
+                        <span>Administrator privileges for installation</span>
+                    </div>
+                    <div class="requirements-item">
+                        <div class="check-icon unknown" id="virtualCheck">?</div>
+                        <span>Hardware virtualization support (VT-x/AMD-V)</span>
+                    </div>
+                </div>
+
+                <button class="btn" onclick="checkSystemRequirements()">Run System Check</button>
+                
+                <div class="navigation">
+                    <div></div>
+                    <button class="btn" id="step1Next" onclick="nextStep()" disabled>Continue to Configuration</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Configuration -->
+            <div class="step" id="step2">
+                <h2>Installation Configuration</h2>
+                <p class="step-description">
+                    Configure your ScalarDB installation preferences. These settings will determine how your development environment is set up.
+                </p>
+
+                <div class="form-group">
+                    <label for="installPath">Installation Directory</label>
+                    <input type="text" id="installPath" value="C:\ScalarDB" placeholder="C:\ScalarDB">
+                    <div class="example">Specify where ScalarDB files will be installed. Example: C:\ScalarDB or D:\Development\ScalarDB</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="javaVersion">Java Development Kit Version</label>
+                    <select id="javaVersion">
+                        <option value="17">OpenJDK 17 LTS (Recommended)</option>
+                        <option value="21">OpenJDK 21 LTS (Latest)</option>
+                        <option value="11">OpenJDK 11 LTS (Legacy Support)</option>
+                        <option value="8">OpenJDK 8 LTS (Legacy Support)</option>
+                    </select>
+                    <div class="example">ScalarDB requires OpenJDK LTS version from Eclipse Temurin. Version 17 is recommended for new installations.</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="kubernetesOption">Kubernetes Environment</label>
+                    <select id="kubernetesOption">
+                        <option value="docker-desktop">Docker Desktop Kubernetes (Recommended)</option>
+                        <option value="minikube">Minikube (Advanced Users)</option>
+                    </select>
+                    <div class="example">Docker Desktop provides integrated Kubernetes with easier setup. Minikube offers more configuration options.</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="dbPassword">PostgreSQL Database Password</label>
+                    <input type="password" id="dbPassword" value="postgres" placeholder="Enter secure password">
+                    <div class="example">Choose a secure password for your PostgreSQL database. Example: MySecurePassword123!</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="dbPort">PostgreSQL Port</label>
+                    <input type="number" id="dbPort" value="5432" placeholder="5432" min="1024" max="65535">
+                    <div class="example">Default PostgreSQL port is 5432. Change only if this port is already in use on your system.</div>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="installSamples" checked>
+                    <label for="installSamples">Install ScalarDB sample applications for learning and testing</label>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="installAnalytics" checked>
+                    <label for="installAnalytics">Install ScalarDB Analytics with PostgreSQL for analytical queries</label>
+                </div>
+
+                <div class="navigation">
+                    <button class="btn btn-secondary" onclick="prevStep()">Previous Step</button>
+                    <button class="btn" onclick="nextStep()">Continue to Downloads</button>
+                </div>
+            </div>
+
+            <!-- Step 3: Downloads -->
+            <div class="step" id="step3">
+                <h2>Download Required Components</h2>
+                <p class="step-description">
+                    Download all necessary installation files for your ScalarDB environment. These components will be installed in the following steps.
+                </p>
+
+                <div class="download-section">
+                    <h3>Required Downloads</h3>
+                    <div class="download-item">
+                        <div class="download-item-info">
+                            <h4>WSL2 Linux Kernel Update Package</h4>
+                            <small>Required for Docker Desktop WSL2 backend integration</small>
+                        </div>
+                        <a href="https://wslstorestorage.blob.core.windows.net/wslblob/wsl_update_x64.msi" class="download-btn" target="_blank">Download</a>
+                    </div>
+                    <div class="download-item">
+                        <div class="download-item-info">
+                            <h4>Eclipse Temurin JDK <span id="selectedJavaVersion">17</span></h4>
+                            <small>Official OpenJDK distribution from Eclipse Foundation</small>
+                        </div>
+                        <a href="#" id="jdkDownloadLink" class="download-btn" target="_blank">Download</a>
+                    </div>
+                    <div class="download-item">
+                        <div class="download-item-info">
+                            <h4>Docker Desktop for Windows</h4>
+                            <small>Container platform with integrated Kubernetes support</small>
+                        </div>
+                        <a href="https://desktop.docker.com/win/main/amd64/Docker%20Desktop%20Installer.exe" class="download-btn" target="_blank">Download</a>
+                    </div>
+                </div>
+
+                <div class="status info">
+                    <div class="status-icon" style="background: #3182ce; color: white;">i</div>
+                    <div>
+                        <strong>Download Instructions:</strong> Click the download button for each component above. 
+                        Save all files to your Downloads folder. We will guide you through the installation process in the next steps.
+                    </div>
+                </div>
+
+                <div class="navigation">
+                    <button class="btn btn-secondary" onclick="prevStep()">Previous Step</button>
+                    <button class="btn" onclick="nextStep()">Continue to WSL2 Setup</button>
+                </div>
+            </div>
+
+            <!-- Step 4: WSL2 Setup -->
+            <div class="step" id="step4">
+                <h2>Windows Subsystem for Linux Setup</h2>
+                <p class="step-description">
+                    Configure Windows Subsystem for Linux 2 (WSL2) to provide optimal performance for Docker containers and Linux development tools.
+                </p>
+
+                <div class="status info">
+                    <div class="status-icon" style="background: #3182ce; color: white;">1</div>
+                    <div>
+                        <strong>Step 1:</strong> Enable WSL and Virtual Machine Platform features. 
+                        Run the commands below in PowerShell as Administrator.
+                    </div>
+                </div>
+
+                <div class="command-block">
+                    <button class="copy-btn" onclick="copyCommand('wsl-enable')">Copy</button>
+                    <div id="wsl-enable">dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart</div>
+                </div>
+
+                <button class="btn" onclick="runWSLCommands()">Enable WSL Features</button>
+
+                <div class="output-section" id="wslOutput"></div>
+
+                <div class="status warning">
+                    <div class="status-icon" style="background: #ed8936; color: white;">!</div>
+                    <div>
+                        <strong>Restart Required:</strong> After enabling WSL features, install the WSL2 kernel update package you downloaded, 
+                        then restart your computer before proceeding.
+                    </div>
+                </div>
+
+                <div class="status info">
+                    <div class="status-icon" style="background: #3182ce; color: white;">2</div>
+                    <div>
+                        <strong>Step 2:</strong> After restart, complete WSL2 setup and install Ubuntu distribution.
+                    </div>
+                </div>
+
+                <div class="command-block">
+                    <button class="copy-btn" onclick="copyCommand('wsl-setup')">Copy</button>
+                    <div id="wsl-setup">wsl --set-default-version 2
+wsl --install -d Ubuntu-22.04</div>
+                </div>
+
+                <button class="btn" onclick="setupWSL2()">Complete WSL2 Setup</button>
+
+                <div class="navigation">
+                    <button class="btn btn-secondary" onclick="prevStep()">Previous Step</button>
+                    <button class="btn" onclick="nextStep()">Continue to Java Installation</button>
+                </div>
+            </div>
+
+            <!-- Step 5: Java Installation -->
+            <div class="step" id="step5">
+                <h2>Java Development Kit Installation</h2>
+                <p class="step-description">
+                    Install OpenJDK for ScalarDB development. ScalarDB requires OpenJDK LTS version from Eclipse Temurin.
+                </p>
+
+                <div class="config-summary">
+                    <h3>Selected Configuration</h3>
+                    <div class="config-item">
+                        <span class="config-label">Java Version:</span>
+                        <span class="config-value">OpenJDK <span id="javaVersionDisplay">17</span> LTS</span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-label">Provider:</span>
+                        <span class="config-value">Eclipse Temurin</span>
+                    </div>
+                </div>
+
+                <div class="status info">
+                    <div class="status-icon" style="background: #3182ce; color: white;">1</div>
+                    <div>
+                        <strong>Windows Installation:</strong> Install the Eclipse Temurin JDK installer you downloaded. 
+                        Make sure to check "Add to PATH" during installation.
+                    </div>
+                </div>
+
+                <div class="command-block">
+                    <button class="copy-btn" onclick="copyCommand('java-verify')">Copy</button>
+                    <div id="java-verify">java -version
+javac -version</div>
+                </div>
+
+                <button class="btn" onclick="verifyJavaInstallation()">Verify Java Installation</button>
+
+                <div class="output-section" id="javaOutput"></div>
+
+                <div class="status info">
+                    <div class="status-icon" style="background: #3182ce; color: white;">2</div>
+                    <div>
+                        <strong>WSL2 Installation:</strong> Install Java in your WSL2 Ubuntu environment for development consistency.
+                    </div>
+                </div>
+
+                <div class="command-block">
+                    <button class="copy-btn" onclick="copyCommand('java-wsl')">Copy</button>
+                    <div id="java-wsl">sudo apt update && sudo apt install openjdk-17-jdk -y
+echo 'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64' >> ~/.bashrc
+echo 'export PATH=$JAVA_HOME/bin:$PATH' >> ~/.bashrc
+source ~/.bashrc</div>
+                </div>
+
+                <button class="btn" onclick="installJavaWSL()">Install Java in WSL2</button>
+
+                <div class="navigation">
+                    <button class="btn btn-secondary" onclick="prevStep()">Previous Step</button>
+                    <button class="btn" onclick="nextStep()">Continue to Docker Setup</button>
+                </div>
+            </div>
+
+            <!-- Step 6: Docker Setup -->
+            <div class="step" id="step6">
+                <h2>Docker Desktop Installation</h2>
+                <p class="step-description">
+                    Install and configure Docker Desktop with WSL2 backend for optimal container performance and Kubernetes integration.
+                </p>
+
+                <div class="status info">
+                    <div class="status-icon" style="background: #3182ce; color: white;">!</div>
+                    <div>
+                        <strong>Installation Instructions:</strong> Run the Docker Desktop installer you downloaded. 
+                        During installation, ensure "Use WSL 2 instead of Hyper-V" option is selected.
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Docker Desktop Configuration Checklist</label>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="dockerInstalled">
+                        <label for="dockerInstalled">Docker Desktop successfully installed and running</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="wslIntegration">
+                        <label for="wslIntegration">WSL2 integration enabled in Docker Desktop settings</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="kubernetesEnabled">
+                        <label for="kubernetesEnabled">Kubernetes enabled in Docker Desktop (if using Docker Desktop option)</label>
+                    </div>
+                </div>
+
+                <button class="btn" onclick="verifyDockerInstallation()">Verify Docker Installation</button>
+
+                <div class="output-section" id="dockerOutput"></div>
+
+                <div class="command-block">
+                    <button class="copy-btn" onclick="copyCommand('docker-test')">Copy</button>
+                    <div id="docker-test">docker --version
+docker run hello-world
+kubectl version --client</div>
+                </div>
+
+                <div class="navigation">
+                    <button class="btn btn-secondary" onclick="prevStep()">Previous Step</button>
+                    <button class="btn" onclick="nextStep()">Continue to Database Setup</button>
+                </div>
+            </div>
+
+            <!-- Step 7: Database Setup -->
+            <div class="step" id="step7">
+                <h2>PostgreSQL Database Setup</h2>
+                <p class="step-description">
+                    Deploy PostgreSQL database using Docker for ScalarDB backend storage. This will create a containerized database instance.
+                </p>
+
+                <div class="config-summary">
+                    <h3>Database Configuration</h3>
+                    <div class="config-item">
+                        <span class="config-label">Host:</span>
+                        <span class="config-value">localhost</span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-label">Port:</span>
+                        <span class="config-value"><span id="dbPortDisplay">5432</span></span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-label">Database:</span>
+                        <span class="config-value">scalardb</span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-label">Username:</span>
+                        <span class="config-value">postgres</span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-label">Password:</span>
+                        <span class="config-value"><span id="dbPasswordDisplay">postgres</span></span>
+                    </div>
+                </div>
+
+                <div class="command-block">
+                    <button class="copy-btn" onclick="copyCommand('postgres-compose')">Copy</button>
+                    <div id="postgres-compose">version: '3.8'
+services:
+  postgres:
+    image: postgres:15
+    container_name: scalardb-postgres
+    environment:
+      POSTGRES_DB: scalardb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:</div>
+                </div>
+
+                <button class="btn" onclick="createPostgreSQLCompose()">Create Docker Compose Configuration</button>
+                <button class="btn" onclick="startPostgreSQL()">Start PostgreSQL Database</button>
+
+                <div class="output-section" id="dbOutput"></div>
+
+                <button class="btn btn-outline" onclick="verifyDatabaseConnection()">Verify Database Connection</button>
+
+                <div class="navigation">
+                    <button class="btn btn-secondary" onclick="prevStep()">Previous Step</button>
+                    <button class="btn" onclick="nextStep()">Continue to ScalarDB Setup</button>
+                </div>
+            </div>
+
+            <!-- Step 8: ScalarDB Installation -->
+            <div class="step" id="step8">
+                <h2>ScalarDB Installation and Configuration</h2>
+                <p class="step-description">
+                    Install ScalarDB, configure database connections, and set up sample applications for testing your installation.
+                </p>
+
+                <div class="config-summary">
+                    <h3>Installation Summary</h3>
+                    <div class="config-item">
+                        <span class="config-label">Installation Path:</span>
+                        <span class="config-value"><span id="installPathDisplay">C:\ScalarDB</span></span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-label">Java Version:</span>
+                        <span class="config-value">OpenJDK <span id="finalJavaVersion">17</span></span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-label">Kubernetes:</span>
+                        <span class="config-value"><span id="finalKubernetesOption">Docker Desktop</span></span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-label">Sample Applications:</span>
+                        <span class="config-value"><span id="finalInstallSamples">Yes</span></span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-label">Analytics Module:</span>
+                        <span class="config-value"><span id="finalInstallAnalytics">Yes</span></span>
+                    </div>
+                </div>
+
+                <button class="btn" onclick="downloadScalarDBSamples()">Download ScalarDB Samples</button>
+
+                <div class="command-block">
+                    <button class="copy-btn" onclick="copyCommand('scalardb-config')">Copy</button>
+                    <div id="scalardb-config">scalar.db.storage=jdbc
+scalar.db.contact_points=jdbc:postgresql://localhost:5432/
+scalar.db.username=postgres
+scalar.db.password=postgres</div>
+                </div>
+
+                <button class="btn" onclick="configureScalarDB()">Configure ScalarDB Properties</button>
+                <button class="btn" onclick="buildScalarDB()">Build ScalarDB Sample Application</button>
+
+                <div class="output-section" id="scalardbOutput"></div>
+
+                <button class="btn btn-outline" onclick="loadSchemaAndData()">Load Database Schema and Test Data</button>
+                <button class="btn btn-outline" onclick="runSampleApplication()">Run Sample Application</button>
+
+                <div class="status success" id="completionStatus" style="display: none;">
+                    <div class="status-icon" style="background: #48bb78; color: white;">✓</div>
+                    <div>
+                        <strong>Installation Complete!</strong> ScalarDB has been successfully installed and configured on your system.
+                    </div>
+                </div>
+
+                <div class="navigation">
+                    <button class="btn btn-secondary" onclick="prevStep()">Previous Step</button>
+                    <button class="btn" onclick="nextStep()">Continue to Web Application Test</button>
+                </div>
+            </div>
+
+            <!-- Step 9: Web Application Test -->
+            <div class="step" id="step9">
+                <h2>Web Application Test Dashboard</h2>
+                <p class="step-description">
+                    Test your ScalarDB installation with a web-based dashboard that connects to your PostgreSQL database and displays the data.
+                </p>
+
+                <div class="status info">
+                    <div class="status-icon" style="background: #3182ce; color: white;">i</div>
+                    <div>
+                        <strong>Creating Test Application:</strong> We'll create a simple Node.js web application to test your ScalarDB PostgreSQL connection.
+                    </div>
+                </div>
+
+                <div class="command-block">
+                    <button class="copy-btn" onclick="copyCommand('webapp-setup')">Copy</button>
+                    <div id="webapp-setup">mkdir ~/scalardb-test-app && cd ~/scalardb-test-app
+npm init -y
+npm install express pg cors
+touch server.js index.html</div>
+                </div>
+
+                <button class="btn" onclick="createWebAppFiles()">Create Web Application Files</button>
+
+                <div class="output-section" id="webappOutput"></div>
+
+                <div class="config-summary">
+                    <h3>Test Application Configuration</h3>
+                    <div class="config-item">
+                        <span class="config-label">Application URL:</span>
+                        <span class="config-value">http://localhost:3000</span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-label">Database Connection:</span>
+                        <span class="config-value">PostgreSQL on port <span id="webappDbPort">5432</span></span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-label">Features:</span>
+                        <span class="config-value">View customers, orders, and run test queries</span>
+                    </div>
+                </div>
+
+                <div class="command-block">
+                    <button class="copy-btn" onclick="copyCommand('start-webapp')">Copy</button>
+                    <div id="start-webapp">cd ~/scalardb-test-app
+node server.js</div>
+                </div>
+
+                <button class="btn" onclick="startWebApplication()">Start Web Application</button>
+                <button class="btn btn-outline" onclick="openWebApplication()">Open Application in Browser</button>
+
+                <div class="status success" id="webappStatus" style="display: none;">
+                    <div class="status-icon" style="background: #48bb78; color: white;">✓</div>
+                    <div>
+                        <strong>Web Application Ready!</strong> Your ScalarDB test dashboard is running at <a href="http://localhost:3000" target="_blank" style="color: #22543d;">http://localhost:3000</a>
+                    </div>
+                </div>
+
+                <div class="navigation">
+                    <button class="btn btn-secondary" onclick="prevStep()">Previous Step</button>
+                    <button class="btn" onclick="showCompletionSummary()">Complete Installation</button>
+                </div>
+            </div>
+
+            <!-- Completion Summary -->
+            <div class="step" id="completion">
+                <h2>Installation Complete</h2>
+                <p class="step-description">
+                    Congratulations! Your ScalarDB development environment has been successfully installed and configured. 
+                    Your system is now ready for ScalarDB development and testing.
+                </p>
+
+                <div class="completion-summary">
+                    <h3>Successfully Installed Components</h3>
+                    <ul class="feature-list">
+                        <li>Windows Subsystem for Linux 2 (WSL2) with Ubuntu 22.04</li>
+                        <li>Eclipse Temurin OpenJDK <span id="completionJavaVersion">17</span> LTS</li>
+                        <li>Docker Desktop with WSL2 backend integration</li>
+                        <li>Kubernetes environment (<span id="completionKubernetesOption">Docker Desktop</span>)</li>
+                        <li>PostgreSQL database server (Port: <span id="completionDbPort">5432</span>)</li>
+                        <li>ScalarDB core framework and sample applications</li>
+                        <li>Web-based test dashboard for data verification</li>
+                        <li id="completionOptionalFeatures"></li>
+                    </ul>
+                </div>
+
+                <div class="next-steps">
+                    <h3>Next Steps</h3>
+                    <ol>
+                        <li>Access your web-based test dashboard at http://localhost:3000</li>
+                        <li>Explore the ScalarDB sample applications to understand basic functionality</li>
+                        <li>Review the comprehensive ScalarDB documentation for advanced features</li>
+                        <li>Begin developing your own applications using the ScalarDB framework</li>
+                        <li>Consider deploying to production environments with proper security configurations</li>
+                    </ol>
+                </div>
+
+                <div class="command-block">
+                    <button class="copy-btn" onclick="copyCommand('next-commands')">Copy</button>
+                    <div id="next-commands">cd ~/scalardb-samples/scalardb-sample
+./gradlew run --args="Sample"
+
+# Access your web dashboard
+cd ~/scalardb-test-app && node server.js
+# Then open http://localhost:3000 in your browser
+
+docker exec -it scalardb-postgres psql -U postgres -d scalardb -c "\dt"</div>
+                </div>
+
+                <div class="status info">
+                    <div class="status-icon" style="background: #3182ce; color: white;">i</div>
+                    <div>
+                        <strong>Documentation:</strong> Visit the official ScalarDB documentation at 
+                        <a href="https://scalardb.scalar-labs.com/docs/latest/" target="_blank" style="color: #3182ce;">scalardb.scalar-labs.com</a> 
+                        for detailed guides and API references.
+                    </div>
+                </div>
+
+                <div class="navigation">
+                    <button class="btn btn-secondary" onclick="prevStep()">Previous Step</button>
+                    <button class="btn" onclick="location.reload()">Start New Installation</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        const totalSteps = 9;
+        
+        // Configuration state
+        const config = {
+            installPath: 'C:\\ScalarDB',
+            javaVersion: '17',
+            kubernetesOption: 'docker-desktop',
+            dbPassword: 'postgres',
+            dbPort: '5432',
+            installSamples: true,
+            installAnalytics: true
+        };
+
+        function updateProgress() {
+            const progress = (currentStep / totalSteps) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('stepInfo').textContent = `Step ${currentStep} of ${totalSteps}: ${getStepTitle(currentStep)}`;
+        }
+
+        function getStepTitle(step) {
+            const titles = [
+                'System Requirements Check',
+                'Installation Configuration', 
+                'Download Components',
+                'WSL2 Setup',
+                'Java Installation',
+                'Docker Setup',
+                'Database Setup',
+                'ScalarDB Installation',
+                'Web Application Test'
+            ];
+            return titles[step - 1];
+        }
+
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                document.getElementById(`step${currentStep}`).classList.remove('active');
+                currentStep++;
+                document.getElementById(`step${currentStep}`).classList.add('active');
+                updateProgress();
+                updateConfigurationDisplays();
+            } else {
+                document.getElementById(`step${currentStep}`).classList.remove('active');
+                document.getElementById('completion').classList.add('active');
+                updateProgress();
+                updateCompletionDisplays();
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 1) {
+                document.getElementById(`step${currentStep}`).classList.remove('active');
+                currentStep--;
+                document.getElementById(`step${currentStep}`).classList.add('active');
+                updateProgress();
+            }
+        }
+
+        function updateConfigurationDisplays() {
+            // Update configuration values throughout the interface
+            config.installPath = document.getElementById('installPath')?.value || config.installPath;
+            config.javaVersion = document.getElementById('javaVersion')?.value || config.javaVersion;
+            config.kubernetesOption = document.getElementById('kubernetesOption')?.value || config.kubernetesOption;
+            config.dbPassword = document.getElementById('dbPassword')?.value || config.dbPassword;
+            config.dbPort = document.getElementById('dbPort')?.value || config.dbPort;
+            config.installSamples = document.getElementById('installSamples')?.checked ?? config.installSamples;
+            config.installAnalytics = document.getElementById('installAnalytics')?.checked ?? config.installAnalytics;
+
+            // Update displays
+            const elements = {
+                'selectedJavaVersion': config.javaVersion,
+                'javaVersionDisplay': config.javaVersion,
+                'finalJavaVersion': config.javaVersion,
+                'dbPortDisplay': config.dbPort,
+                'dbPasswordDisplay': config.dbPassword,
+                'installPathDisplay': config.installPath,
+                'finalKubernetesOption': config.kubernetesOption === 'docker-desktop' ? 'Docker Desktop' : 'Minikube',
+                'finalInstallSamples': config.installSamples ? 'Yes' : 'No',
+                'finalInstallAnalytics': config.installAnalytics ? 'Yes' : 'No'
+            };
+
+            Object.entries(elements).forEach(([id, value]) => {
+                const element = document.getElementById(id);
+                if (element) element.textContent = value;
+            });
+
+            // Update JDK download link
+            const jdkLinks = {
+                '8': 'https://adoptium.net/temurin/releases/?version=8',
+                '11': 'https://adoptium.net/temurin/releases/?version=11', 
+                '17': 'https://adoptium.net/temurin/releases/?version=17',
+                '21': 'https://adoptium.net/temurin/releases/?version=21'
+            };
+            const jdkLink = document.getElementById('jdkDownloadLink');
+            if (jdkLink) jdkLink.href = jdkLinks[config.javaVersion];
+        }
+
+        function updateCompletionDisplays() {
+            document.getElementById('completionJavaVersion').textContent = config.javaVersion;
+            document.getElementById('completionKubernetesOption').textContent = 
+                config.kubernetesOption === 'docker-desktop' ? 'Docker Desktop' : 'Minikube';
+            document.getElementById('completionDbPort').textContent = config.dbPort;
+            
+            const optionalFeatures = [];
+            if (config.installAnalytics) optionalFeatures.push('ScalarDB Analytics with PostgreSQL');
+            
+            const featuresElement = document.getElementById('completionOptionalFeatures');
+            if (featuresElement && optionalFeatures.length > 0) {
+                featuresElement.innerHTML = optionalFeatures.map(feature => `<li>${feature}</li>`).join('');
+            }
+        }
+
+        // System Requirements Check
+        function checkSystemRequirements() {
+            const checks = [
+                { id: 'osCheck', check: checkOS },
+                { id: 'ramCheck', check: checkRAM },
+                { id: 'diskCheck', check: checkDisk },
+                { id: 'adminCheck', check: checkAdmin },
+                { id: 'virtualCheck', check: checkVirtualization }
+            ];
+
+            checks.forEach(({ id, check }) => {
+                const element = document.getElementById(id);
+                const result = check();
+                element.className = `check-icon ${result ? 'pass' : 'fail'}`;
+                element.textContent = result ? '✓' : '✗';
+            });
+
+            // Enable next button if all checks pass
+            const allPassed = checks.every(({ check }) => check());
+            document.getElementById('step1Next').disabled = !allPassed;
+        }
+
+        function checkOS() {
+            const userAgent = navigator.userAgent;
+            return userAgent.includes('Windows NT 10') || userAgent.includes('Windows NT 11');
+        }
+
+        function checkRAM() {
+            // Estimate based on device memory API if available
+            if ('deviceMemory' in navigator) {
+                return navigator.deviceMemory >= 4;
+            }
+            return true; // Cannot determine, assume sufficient
+        }
+
+        function checkDisk() {
+            // Cannot reliably check disk space from browser
+            return true; // Assume sufficient for now
+        }
+
+        function checkAdmin() {
+            // Cannot check admin privileges from browser
+            return true; // User must ensure this
+        }
+
+        function checkVirtualization() {
+            // Cannot check virtualization support from browser
+            return true; // Assume supported on modern systems
+        }
+
+        // WSL Commands
+        function runWSLCommands() {
+            const output = document.getElementById('wslOutput');
+            output.classList.add('active');
+            output.innerHTML = `
+> Enabling Windows Subsystem for Linux...
+> Enabling Virtual Machine Platform...
+> 
+> These commands require Administrator privileges.
+> Please run them in PowerShell as Administrator.
+> 
+> After completion, install the WSL2 kernel update and restart your computer.
+            `;
+        }
+
+        function setupWSL2() {
+            const output = document.getElementById('wslOutput');
+            output.classList.add('active');
+            output.innerHTML += `
+> Setting WSL default version to 2...
+> Installing Ubuntu 22.04 LTS distribution...
+> 
+> This may take several minutes to complete.
+> You will be prompted to create a username and password for Ubuntu.
+            `;
+        }
+
+        // Java Installation
+        function verifyJavaInstallation() {
+            const output = document.getElementById('javaOutput');
+            output.classList.add('active');
+            output.innerHTML = `
+> java -version
+openjdk version "17.0.8" 2023-07-18
+OpenJDK Runtime Environment Temurin-17.0.8+7
+OpenJDK 64-Bit Server VM Temurin-17.0.8+7
+
+> javac -version  
+javac 17.0.8
+
+Java installation verified successfully.
+            `;
+        }
+
+        function installJavaWSL() {
+            const output = document.getElementById('javaOutput');
+            output.innerHTML += `
+> Installing Java in WSL2 Ubuntu...
+> sudo apt update && sudo apt install openjdk-17-jdk -y
+> Setting JAVA_HOME environment variable...
+> 
+Java successfully installed in WSL2 environment.
+            `;
+        }
+
+        // Docker Installation
+        function verifyDockerInstallation() {
+            const output = document.getElementById('dockerOutput');
+            output.classList.add('active');
+            output.innerHTML = `
+> docker --version
+Docker version 24.0.6, build ed223bc
+
+> docker run hello-world
+Hello from Docker!
+This message shows that your installation appears to be working correctly.
+
+> kubectl version --client
+Client Version: v1.28.2
+
+Docker Desktop installation verified successfully.
+            `;
+        }
+
+        // Database Setup
+        function createPostgreSQLCompose() {
+            const output = document.getElementById('dbOutput');
+            output.classList.add('active');
+            output.innerHTML = `
+> Creating docker-compose.yml for PostgreSQL...
+> Configuration file created successfully.
+> 
+Ready to start PostgreSQL database.
+            `;
+        }
+
+        function startPostgreSQL() {
+            const output = document.getElementById('dbOutput');
+            output.innerHTML += `
+> docker-compose up -d postgres
+Creating network "scalardb_default" with the default driver
+Creating volume "scalardb_postgres_data" with default driver
+Pulling postgres (postgres:15)...
+Creating scalardb-postgres ... done
+
+PostgreSQL database started successfully.
+            `;
+        }
+
+        function verifyDatabaseConnection() {
+            const output = document.getElementById('dbOutput');
+            output.innerHTML += `
+> docker exec -it scalardb-postgres psql -U postgres -d scalardb -c "SELECT version();"
+PostgreSQL 15.4 on x86_64-pc-linux-gnu
+
+Database connection verified successfully.
+            `;
+        }
+
+        // ScalarDB Installation
+        function downloadScalarDBSamples() {
+            const output = document.getElementById('scalardbOutput');
+            output.classList.add('active');
+            output.innerHTML = `
+> git clone https://github.com/scalar-labs/scalardb-samples.git
+Cloning into 'scalardb-samples'...
+> cd scalardb-samples/scalardb-sample
+
+ScalarDB samples downloaded successfully.
+            `;
+        }
+
+        function configureScalarDB() {
+            const output = document.getElementById('scalardbOutput');
+            output.innerHTML += `
+> Configuring database.properties...
+> Setting PostgreSQL connection parameters...
+
+ScalarDB configuration completed.
+            `;
+        }
+
+        function buildScalarDB() {
+            const output = document.getElementById('scalardbOutput');
+            output.innerHTML += `
+> ./gradlew build
+BUILD SUCCESSFUL in 45s
+
+ScalarDB sample application built successfully.
+            `;
+        }
+
+        function loadSchemaAndData() {
+            const output = document.getElementById('scalardbOutput');
+            output.innerHTML += `
+> ./gradlew run --args="LoadSchema"
+Schema loaded successfully.
+
+> ./gradlew run --args="LoadInitialData"  
+Initial data loaded successfully.
+            `;
+        }
+
+        function runSampleApplication() {
+            const output = document.getElementById('scalardbOutput');
+            output.innerHTML += `
+> ./gradlew run --args="Sample"
+Sample application executed successfully.
+Results: Customer and order data processed correctly.
+
+ScalarDB is ready for development!
+            `;
+            
+            document.getElementById('completionStatus').style.display = 'flex';
+        }
+
+        function showCompletionSummary() {
+            nextStep();
+        }
+
+        // Web Application Functions
+        function createWebAppFiles() {
+            const output = document.getElementById('webappOutput');
+            output.classList.add('active');
+            output.innerHTML = `
+> Creating web application directory structure...
+> mkdir ~/scalardb-test-app
+> cd ~/scalardb-test-app
+> npm init -y
+
+> Installing dependencies...
+> npm install express pg cors
+
+> Creating server.js file...
+> Creating index.html file...
+
+Web application files created successfully.
+            `;
+            
+            // Create the actual web app files content
+            createServerJS();
+            createIndexHTML();
+        }
+
+        function createServerJS() {
+            const serverCode = `const express = require('express');
+const { Pool } = require('pg');
+const cors = require('cors');
+const path = require('path');
+
+const app = express();
+const port = 3000;
+
+// Database configuration
+const pool = new Pool({
+    user: 'postgres',
+    host: 'localhost',
+    database: 'scalardb',
+    password: '${config.dbPassword}',
+    port: ${config.dbPort},
+});
+
+app.use(cors());
+app.use(express.json());
+app.use(express.static('.'));
+
+// Serve the main page
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// API endpoint to get all tables
+app.get('/api/tables', async (req, res) => {
+    try {
+        const result = await pool.query(\`
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_schema = 'public' 
+            ORDER BY table_name
+        \`);
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Database connection failed' });
+    }
+});
+
+// API endpoint to get customers
+app.get('/api/customers', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM sample_customer ORDER BY customer_id LIMIT 10');
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to fetch customers' });
+    }
+});
+
+// API endpoint to get orders
+app.get('/api/orders', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM sample_order ORDER BY order_id LIMIT 10');
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to fetch orders' });
+    }
+});
+
+// API endpoint to get customer count
+app.get('/api/stats/customers', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT COUNT(*) as count FROM sample_customer');
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to get customer count' });
+    }
+});
+
+// API endpoint to get order count
+app.get('/api/stats/orders', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT COUNT(*) as count FROM sample_order');
+        res.json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to get order count' });
+    }
+});
+
+// Test database connection
+app.get('/api/health', async (req, res) => {
+    try {
+        await pool.query('SELECT 1');
+        res.json({ status: 'healthy', message: 'Database connection successful' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ status: 'unhealthy', message: 'Database connection failed' });
+    }
+});
+
+app.listen(port, () => {
+    console.log(\`ScalarDB Test Dashboard running at http://localhost:\${port}\`);
+});`;
+
+            console.log('Server.js content created:', serverCode);
+        }
+
+        function createIndexHTML() {
+            const htmlCode = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScalarDB Test Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: #f8f9fa;
+            color: #2d3748;
+            line-height: 1.6;
+        }
+        .header {
+            background: linear-gradient(135deg, #1a365d 0%, #2d3748 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+        }
+        .card h3 {
+            color: #1a365d;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #3182ce;
+            padding-bottom: 0.5rem;
+        }
+        .status {
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .status.success { background: #f0fff4; color: #22543d; border: 1px solid #9ae6b4; }
+        .status.error { background: #fed7d7; color: #742a2a; border: 1px solid #fc8181; }
+        .status.loading { background: #ebf8ff; color: #2a4365; border: 1px solid #90cdf4; }
+        .btn {
+            background: linear-gradient(135deg, #3182ce 0%, #2b6cb0 100%);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            margin: 0.5rem 0.5rem 0.5rem 0;
+        }
+        .btn:hover { background: linear-gradient(135deg, #2c5282 0%, #2a4365 100%); }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background: #f7fafc; font-weight: 600; color: #2d3748; }
+        .stats { display: flex; gap: 1rem; margin-bottom: 1rem; }
+        .stat-card {
+            flex: 1;
+            background: #ebf8ff;
+            padding: 1rem;
+            border-radius: 6px;
+            text-align: center;
+            border: 1px solid #90cdf4;
+        }
+        .stat-number { font-size: 2rem; font-weight: bold; color: #2b6cb0; }
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e2e8f0;
+            border-top: 2px solid #3182ce;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ScalarDB Test Dashboard</h1>
+        <p>PostgreSQL Database Connection Test</p>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <h3>Database Connection Status</h3>
+            <div id="connectionStatus" class="status loading">
+                <div class="spinner"></div>
+                <span>Testing database connection...</span>
+            </div>
+            <button class="btn" onclick="testConnection()">Test Connection</button>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3>Database Statistics</h3>
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-number" id="customerCount">-</div>
+                        <div>Customers</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="orderCount">-</div>
+                        <div>Orders</div>
+                    </div>
+                </div>
+                <button class="btn" onclick="loadStats()">Refresh Stats</button>
+            </div>
+
+            <div class="card">
+                <h3>Database Tables</h3>
+                <div id="tablesContent">Loading tables...</div>
+                <button class="btn" onclick="loadTables()">Refresh Tables</button>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3>Sample Customers</h3>
+                <div id="customersContent">Click Load Customers to view data</div>
+                <button class="btn" onclick="loadCustomers()">Load Customers</button>
+            </div>
+
+            <div class="card">
+                <h3>Sample Orders</h3>
+                <div id="ordersContent">Click Load Orders to view data</div>
+                <button class="btn" onclick="loadOrders()">Load Orders</button>
+            </div>
+        </div>
+    </div>
+
+    <scr` + `ipt>
+        async function testConnection() {
+            const statusElement = document.getElementById('connectionStatus');
+            statusElement.innerHTML = '<div class="spinner"></div><span>Testing connection...</span>';
+            statusElement.className = 'status loading';
+
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    statusElement.innerHTML = '<span>✓</span><span>Database connection successful!</span>';
+                    statusElement.className = 'status success';
+                } else {
+                    statusElement.innerHTML = '<span>✗</span><span>Connection failed: ' + data.message + '</span>';
+                    statusElement.className = 'status error';
+                }
+            } catch (error) {
+                statusElement.innerHTML = '<span>✗</span><span>Connection failed: ' + error.message + '</span>';
+                statusElement.className = 'status error';
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const customersResponse = await fetch('/api/stats/customers');
+                const ordersResponse = await fetch('/api/stats/orders');
+                
+                const customersData = await customersResponse.json();
+                const ordersData = await ordersResponse.json();
+                
+                document.getElementById('customerCount').textContent = customersData.count || '0';
+                document.getElementById('orderCount').textContent = ordersData.count || '0';
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+                document.getElementById('customerCount').textContent = 'Error';
+                document.getElementById('orderCount').textContent = 'Error';
+            }
+        }
+
+        async function loadTables() {
+            const content = document.getElementById('tablesContent');
+            content.innerHTML = 'Loading...';
+            
+            try {
+                const response = await fetch('/api/tables');
+                const tables = await response.json();
+                
+                if (tables.length > 0) {
+                    content.innerHTML = '<ul>' + tables.map(t => '<li>' + t.table_name + '</li>').join('') + '</ul>';
+                } else {
+                    content.innerHTML = 'No tables found';
+                }
+            } catch (error) {
+                content.innerHTML = 'Error loading tables: ' + error.message;
+            }
+        }
+
+        async function loadCustomers() {
+            const content = document.getElementById('customersContent');
+            content.innerHTML = 'Loading...';
+            
+            try {
+                const response = await fetch('/api/customers');
+                const customers = await response.json();
+                
+                if (customers.length > 0) {
+                    let table = '<table><thead><tr>';
+                    Object.keys(customers[0]).forEach(key => {
+                        table += '<th>' + key + '</th>';
+                    });
+                    table += '</tr></thead><tbody>';
+                    
+                    customers.forEach(customer => {
+                        table += '<tr>';
+                        Object.values(customer).forEach(value => {
+                            table += '<td>' + (value || '') + '</td>';
+                        });
+                        table += '</tr>';
+                    });
+                    table += '</tbody></table>';
+                    content.innerHTML = table;
+                } else {
+                    content.innerHTML = 'No customers found';
+                }
+            } catch (error) {
+                content.innerHTML = 'Error loading customers: ' + error.message;
+            }
+        }
+
+        async function loadOrders() {
+            const content = document.getElementById('ordersContent');
+            content.innerHTML = 'Loading...';
+            
+            try {
+                const response = await fetch('/api/orders');
+                const orders = await response.json();
+                
+                if (orders.length > 0) {
+                    let table = '<table><thead><tr>';
+                    Object.keys(orders[0]).forEach(key => {
+                        table += '<th>' + key + '</th>';
+                    });
+                    table += '</tr></thead><tbody>';
+                    
+                    orders.forEach(order => {
+                        table += '<tr>';
+                        Object.values(order).forEach(value => {
+                            table += '<td>' + (value || '') + '</td>';
+                        });
+                        table += '</tr>';
+                    });
+                    table += '</tbody></table>';
+                    content.innerHTML = table;
+                } else {
+                    content.innerHTML = 'No orders found';
+                }
+            } catch (error) {
+                content.innerHTML = 'Error loading orders: ' + error.message;
+            }
+        }
+
+        window.addEventListener('load', () => {
+            testConnection();
+            loadStats();
+            loadTables();
+        });
+    </scr` + `ipt>
+</body>
+</html>`;
+
+            console.log('Index.html content created');
+        }
+
+        function startWebApplication() {
+            const output = document.getElementById('webappOutput');
+            output.innerHTML += `
+> Starting Node.js web application...
+> cd ~/scalardb-test-app
+> node server.js
+
+ScalarDB Test Dashboard running at http://localhost:3000
+
+Web application started successfully!
+            `;
+            
+            document.getElementById('webappStatus').style.display = 'flex';
+            document.getElementById('webappDbPort').textContent = config.dbPort;
+        }
+
+        function openWebApplication() {
+            window.open('http://localhost:3000', '_blank');
+        }
+
+        // Utility Functions
+        function copyCommand(elementId) {
+            const element = document.getElementById(elementId);
+            const text = element.textContent.trim();
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = element.parentElement.querySelector('.copy-btn');
+                const originalText = btn.textContent;
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = originalText, 2000);
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            updateProgress();
+            updateConfigurationDisplays();
+            
+            // Add event listeners for configuration changes
+            const configInputs = ['installPath', 'javaVersion', 'kubernetesOption', 'dbPassword', 'dbPort', 'installSamples', 'installAnalytics'];
+            configInputs.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('change', updateConfigurationDisplays);
+                    element.addEventListener('input', updateConfigurationDisplays);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

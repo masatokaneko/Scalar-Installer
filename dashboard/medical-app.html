@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScalarDB Medical Records System</title>
+    <link rel="stylesheet" href="dashboard-styles.css">
+</head>
+<body>
+    <div class="header">
+        <div class="logo-area">
+            <div class="logo-text">🏥 Medical Records</div>
+        </div>
+        <h1>ScalarDB Medical System</h1>
+        <p>Patient Management and Medical Records Dashboard</p>
+    </div>
+
+    <div class="container">
+        <div class="card full-width">
+            <h3>🔍 System Status</h3>
+            <div id="healthStatus" class="status loading">
+                <div class="spinner"></div>
+                <span>Checking medical system status...</span>
+            </div>
+            <button class="btn" onclick="checkHealth()">Check System Health</button>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3>📊 Medical Statistics</h3>
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-number" id="patientCount">-</div>
+                        <div class="stat-label">Patients</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="doctorCount">-</div>
+                        <div class="stat-label">Doctors</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="appointmentCount">-</div>
+                        <div class="stat-label">Appointments</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="recordCount">-</div>
+                        <div class="stat-label">Medical Records</div>
+                    </div>
+                </div>
+                <button class="btn" onclick="loadStats()">Refresh Statistics</button>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3>👥 Patients</h3>
+                <div id="patientsContent" class="content-area">Click "Load Patients" to view patient data</div>
+                <button class="btn" onclick="loadPatients()">Load Patients</button>
+            </div>
+
+            <div class="card">
+                <h3>👨‍⚕️ Doctors</h3>
+                <div id="doctorsContent" class="content-area">Click "Load Doctors" to view doctor information</div>
+                <button class="btn" onclick="loadDoctors()">Load Doctors</button>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3>📅 Appointments</h3>
+                <div id="appointmentsContent" class="content-area">Click "Load Appointments" to view appointments</div>
+                <button class="btn" onclick="loadAppointments()">Load Appointments</button>
+            </div>
+
+            <div class="card">
+                <h3>📋 Medical Records</h3>
+                <div id="recordsContent" class="content-area">Click "Load Records" to view medical records</div>
+                <button class="btn" onclick="loadRecords()">Load Medical Records</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check system health
+        async function checkHealth() {
+            const statusElement = document.getElementById('healthStatus');
+            statusElement.innerHTML = '<div class="spinner"></div><span>Checking system...</span>';
+            statusElement.className = 'status loading';
+
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    statusElement.innerHTML = '<span>✓</span><span>Medical system is healthy and connected!</span>';
+                    statusElement.className = 'status success';
+                } else {
+                    statusElement.innerHTML = '<span>✗</span><span>System error: ' + data.message + '</span>';
+                    statusElement.className = 'status error';
+                }
+            } catch (error) {
+                statusElement.innerHTML = '<span>✗</span><span>Connection failed: ' + error.message + '</span>';
+                statusElement.className = 'status error';
+            }
+        }
+
+        // Load statistics
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const stats = await response.json();
+                
+                document.getElementById('patientCount').textContent = stats.patients || '0';
+                document.getElementById('doctorCount').textContent = stats.doctors || '0';
+                document.getElementById('appointmentCount').textContent = stats.appointments || '0';
+                document.getElementById('recordCount').textContent = stats.records || '0';
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+        }
+
+        // Load patients
+        async function loadPatients() {
+            const content = document.getElementById('patientsContent');
+            content.innerHTML = '<div class="spinner"></div> Loading patients...';
+            
+            try {
+                const response = await fetch('/api/patients');
+                const patients = await response.json();
+                
+                if (patients.length > 0) {
+                    let table = '<table><thead><tr><th>ID</th><th>Name</th><th>DOB</th><th>Gender</th><th>Phone</th><th>Email</th></tr></thead><tbody>';
+                    patients.forEach(patient => {
+                        table += `<tr>
+                            <td>${patient.patient_id}</td>
+                            <td>${patient.first_name} ${patient.last_name}</td>
+                            <td>${new Date(patient.date_of_birth).toLocaleDateString()}</td>
+                            <td>${patient.gender}</td>
+                            <td>${patient.phone}</td>
+                            <td>${patient.email}</td>
+                        </tr>`;
+                    });
+                    table += '</tbody></table>';
+                    content.innerHTML = table;
+                } else {
+                    content.innerHTML = '<p>No patients found.</p>';
+                }
+            } catch (error) {
+                content.innerHTML = '<p style="color: #e53e3e;">Error loading patients: ' + error.message + '</p>';
+            }
+        }
+
+        // Load doctors
+        async function loadDoctors() {
+            const content = document.getElementById('doctorsContent');
+            content.innerHTML = '<div class="spinner"></div> Loading doctors...';
+            
+            try {
+                const response = await fetch('/api/doctors');
+                const doctors = await response.json();
+                
+                if (doctors.length > 0) {
+                    let table = '<table><thead><tr><th>ID</th><th>Name</th><th>Specialty</th><th>Phone</th><th>Email</th></tr></thead><tbody>';
+                    doctors.forEach(doctor => {
+                        table += `<tr>
+                            <td>${doctor.doctor_id}</td>
+                            <td>Dr. ${doctor.first_name} ${doctor.last_name}</td>
+                            <td>${doctor.specialty}</td>
+                            <td>${doctor.phone}</td>
+                            <td>${doctor.email}</td>
+                        </tr>`;
+                    });
+                    table += '</tbody></table>';
+                    content.innerHTML = table;
+                } else {
+                    content.innerHTML = '<p>No doctors found.</p>';
+                }
+            } catch (error) {
+                content.innerHTML = '<p style="color: #e53e3e;">Error loading doctors: ' + error.message + '</p>';
+            }
+        }
+
+        // Load appointments
+        async function loadAppointments() {
+            const content = document.getElementById('appointmentsContent');
+            content.innerHTML = '<div class="spinner"></div> Loading appointments...';
+            
+            try {
+                const response = await fetch('/api/appointments');
+                const appointments = await response.json();
+                
+                if (appointments.length > 0) {
+                    let table = '<table><thead><tr><th>ID</th><th>Patient</th><th>Doctor</th><th>Date</th><th>Status</th></tr></thead><tbody>';
+                    appointments.forEach(apt => {
+                        table += `<tr>
+                            <td>${apt.appointment_id}</td>
+                            <td>${apt.patient_name}</td>
+                            <td>${apt.doctor_name} (${apt.specialty})</td>
+                            <td>${new Date(apt.appointment_date).toLocaleString()}</td>
+                            <td><span style="color: ${apt.status === 'completed' ? '#22543d' : '#2a4365'}">${apt.status}</span></td>
+                        </tr>`;
+                    });
+                    table += '</tbody></table>';
+                    content.innerHTML = table;
+                } else {
+                    content.innerHTML = '<p>No appointments found.</p>';
+                }
+            } catch (error) {
+                content.innerHTML = '<p style="color: #e53e3e;">Error loading appointments: ' + error.message + '</p>';
+            }
+        }
+
+        // Load medical records
+        async function loadRecords() {
+            const content = document.getElementById('recordsContent');
+            content.innerHTML = '<div class="spinner"></div> Loading medical records...';
+            
+            try {
+                const response = await fetch('/api/records');
+                const records = await response.json();
+                
+                if (records.length > 0) {
+                    let table = '<table><thead><tr><th>ID</th><th>Patient</th><th>Doctor</th><th>Date</th><th>Diagnosis</th><th>Treatment</th></tr></thead><tbody>';
+                    records.forEach(record => {
+                        table += `<tr>
+                            <td>${record.record_id}</td>
+                            <td>${record.patient_name}</td>
+                            <td>${record.doctor_name}</td>
+                            <td>${new Date(record.visit_date).toLocaleDateString()}</td>
+                            <td>${record.diagnosis}</td>
+                            <td>${record.treatment || 'N/A'}</td>
+                        </tr>`;
+                    });
+                    table += '</tbody></table>';
+                    content.innerHTML = table;
+                } else {
+                    content.innerHTML = '<p>No medical records found.</p>';
+                }
+            } catch (error) {
+                content.innerHTML = '<p style="color: #e53e3e;">Error loading records: ' + error.message + '</p>';
+            }
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            checkHealth();
+            loadStats();
+        });
+    </script>
+</body>
+</html>

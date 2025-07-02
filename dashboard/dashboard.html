@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScalarDB Test Dashboard</title>
+    <link rel="stylesheet" href="dashboard-styles.css">
+</head>
+<body>
+    <div class="header">
+        <div class="logo-area">
+            <div class="logo-text">ScalarDB</div>
+        </div>
+        <h1>Test Dashboard</h1>
+        <p>PostgreSQL Database Connection and Data Verification</p>
+    </div>
+
+    <div class="container">
+        <div class="card full-width">
+            <h3>Database Connection Status</h3>
+            <div id="connectionStatus" class="status loading">
+                <div class="spinner"></div>
+                <span>Testing database connection...</span>
+            </div>
+            <button class="btn" onclick="testConnection()">Test Connection</button>
+            <button class="btn btn-outline" onclick="showConnectionInfo()">Connection Details</button>
+        </div>
+
+        <div id="connectionInfo" class="connection-info" style="display: none;">
+            <h4>Database Configuration</h4>
+            <div class="config-grid">
+                <div class="config-item">
+                    <span class="config-label">Host:</span>
+                    <span class="config-value">localhost</span>
+                </div>
+                <div class="config-item">
+                    <span class="config-label">Port:</span>
+                    <span class="config-value">5432</span>
+                </div>
+                <div class="config-item">
+                    <span class="config-label">Database:</span>
+                    <span class="config-value">scalardb</span>
+                </div>
+                <div class="config-item">
+                    <span class="config-label">Username:</span>
+                    <span class="config-value">postgres</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3>Database Statistics</h3>
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-number" id="customerCount">-</div>
+                        <div class="stat-label">Customers</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="orderCount">-</div>
+                        <div class="stat-label">Orders</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="tableCount">-</div>
+                        <div class="stat-label">Tables</div>
+                    </div>
+                </div>
+                <button class="btn" onclick="loadStats()">Refresh Statistics</button>
+            </div>
+
+            <div class="card">
+                <h3>Database Tables</h3>
+                <div id="tablesContent" class="content-area">Loading tables...</div>
+                <button class="btn" onclick="loadTables()">Refresh Tables</button>
+                <button class="btn btn-outline" onclick="describeTable()">Describe Selected Table</button>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3>Sample Customers</h3>
+                <div class="data-controls">
+                    <label for="customerLimit">Show rows:</label>
+                    <select id="customerLimit">
+                        <option value="5">5</option>
+                        <option value="10" selected>10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                    </select>
+                </div>
+                <div id="customersContent" class="content-area">Click "Load Customers" to view data</div>
+                <button class="btn" onclick="loadCustomers()">Load Customers</button>
+                <button class="btn btn-outline" onclick="exportCustomers()">Export CSV</button>
+            </div>
+
+            <div class="card">
+                <h3>Sample Orders</h3>
+                <div class="data-controls">
+                    <label for="orderLimit">Show rows:</label>
+                    <select id="orderLimit">
+                        <option value="5">5</option>
+                        <option value="10" selected>10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                    </select>
+                </div>
+                <div id="ordersContent" class="content-area">Click "Load Orders" to view data</div>
+                <button class="btn" onclick="loadOrders()">Load Orders</button>
+                <button class="btn btn-outline" onclick="exportOrders()">Export CSV</button>
+            </div>
+        </div>
+
+        <div class="card full-width">
+            <h3>Custom SQL Query</h3>
+            <div class="query-section">
+                <textarea id="sqlQuery" placeholder="Enter your SQL query here...
+Example: SELECT * FROM sample_customer LIMIT 5;"></textarea>
+                <div class="query-controls">
+                    <button class="btn" onclick="executeQuery()">Execute Query</button>
+                    <button class="btn btn-outline" onclick="clearQuery()">Clear</button>
+                    <button class="btn btn-outline" onclick="loadSampleQueries()">Sample Queries</button>
+                </div>
+            </div>
+            <div id="queryResults" class="content-area"></div>
+        </div>
+
+        <div id="sampleQueries" class="sample-queries" style="display: none;">
+            <h4>Sample Queries</h4>
+            <div class="query-examples">
+                <div class="query-example" onclick="loadQuery(this.dataset.query)" data-query="SELECT COUNT(*) as total_customers FROM sample_customer;">
+                    <strong>Total Customer Count</strong>
+                    <code>SELECT COUNT(*) as total_customers FROM sample_customer;</code>
+                </div>
+                <div class="query-example" onclick="loadQuery(this.dataset.query)" data-query="SELECT customer_id, name, credit_limit FROM sample_customer ORDER BY credit_limit DESC LIMIT 10;">
+                    <strong>Top Customers by Credit Limit</strong>
+                    <code>SELECT customer_id, name, credit_limit FROM sample_customer ORDER BY credit_limit DESC LIMIT 10;</code>
+                </div>
+                <div class="query-example" onclick="loadQuery(this.dataset.query)" data-query="SELECT order_id, customer_id, timestamp FROM sample_order ORDER BY timestamp DESC LIMIT 10;">
+                    <strong>Recent Orders</strong>
+                    <code>SELECT order_id, customer_id, timestamp FROM sample_order ORDER BY timestamp DESC LIMIT 10;</code>
+                </div>
+                <div class="query-example" onclick="loadQuery(this.dataset.query)" data-query="SELECT c.name, COUNT(o.order_id) as order_count FROM sample_customer c LEFT JOIN sample_order o ON c.customer_id = o.customer_id GROUP BY c.customer_id, c.name ORDER BY order_count DESC LIMIT 10;">
+                    <strong>Customers with Most Orders</strong>
+                    <code>SELECT c.name, COUNT(o.order_id) as order_count FROM sample_customer c LEFT JOIN sample_order o ON c.customer_id = o.customer_id GROUP BY c.customer_id, c.name ORDER BY order_count DESC LIMIT 10;</code>
+                </div>
+                <div class="query-example" onclick="loadQuery(this.dataset.query)" data-query="SELECT table_name, column_name, data_type FROM information_schema.columns WHERE table_schema = 'public' ORDER BY table_name, ordinal_position;">
+                    <strong>Database Schema Information</strong>
+                    <code>SELECT table_name, column_name, data_type FROM information_schema.columns WHERE table_schema = 'public' ORDER BY table_name, ordinal_position;</code>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="footer-content">
+                <p>ScalarDB Test Dashboard - Verify your installation and explore your data</p>
+                <div class="footer-links">
+                    <a href="https://scalardb.scalar-labs.com/docs/latest/" target="_blank">Documentation</a>
+                    <a href="https://github.com/scalar-labs/scalardb" target="_blank">GitHub</a>
+                    <a href="#" onclick="showAbout()">About</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="aboutModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeAbout()">&times;</span>
+            <h3>About ScalarDB Test Dashboard</h3>
+            <p>This dashboard provides a comprehensive interface for testing and verifying your ScalarDB installation with PostgreSQL.</p>
+            <h4>Features:</h4>
+            <ul>
+                <li>Database connection testing and monitoring</li>
+                <li>Real-time statistics and data visualization</li>
+                <li>Interactive data browsing for customers and orders</li>
+                <li>Custom SQL query execution</li>
+                <li>Data export capabilities</li>
+                <li>Sample query library</li>
+            </ul>
+            <p><strong>Version:</strong> 1.0.0<br>
+            <strong>Compatible with:</strong> ScalarDB 3.x, PostgreSQL 15+</p>
+        </div>
+    </div>
+
+    <script src="dashboard-script.js"></script>
+</body>
+</html>

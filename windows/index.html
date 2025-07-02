@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScalarDB macOS Installation Wizard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #1d1d1f;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            border-radius: 20px;
+            min-height: 100vh;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1d1d1f 0%, #2d2d30 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            border-radius: 20px 20px 0 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .logo-text {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #007AFF, #5856D6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            letter-spacing: -0.025em;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+
+        .progress-container {
+            background: rgba(0, 0, 0, 0.02);
+            padding: 20px 40px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #007AFF, #5856D6);
+            width: 14.3%;
+            transition: width 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            border-radius: 3px;
+        }
+
+        .step-info {
+            text-align: center;
+            color: #6e6e73;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .step {
+            display: none;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        @keyframes fadeInUp {
+            from { 
+                opacity: 0; 
+                transform: translateY(30px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+        }
+
+        .step h2 {
+            color: #1d1d1f;
+            margin-bottom: 24px;
+            font-size: 2rem;
+            font-weight: 600;
+            border-bottom: 3px solid #007AFF;
+            padding-bottom: 12px;
+        }
+
+        .step-description {
+            color: #6e6e73;
+            font-size: 1.1rem;
+            margin-bottom: 32px;
+            line-height: 1.7;
+        }
+
+        .requirements-check {
+            background: linear-gradient(135deg, #f5f5f7 0%, #fafafa 100%);
+            border: 2px solid #d2d2d7;
+            border-radius: 16px;
+            padding: 24px;
+            margin: 24px 0;
+        }
+
+        .requirements-check h3 {
+            color: #1d1d1f;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .requirements-item {
+            display: flex;
+            align-items: center;
+            margin: 16px 0;
+            gap: 16px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .requirements-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .check-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .check-icon.pass {
+            background: #34C759;
+            color: white;
+        }
+
+        .check-icon.fail {
+            background: #FF3B30;
+            color: white;
+        }
+
+        .check-icon.unknown {
+            background: #FF9500;
+            color: white;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #007AFF 0%, #5856D6 100%);
+            color: white;
+            padding: 16px 32px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 12px;
+            margin-bottom: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 122, 255, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            background: #d2d2d7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #8e8e93 0%, #6e6e73 100%);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            box-shadow: 0 8px 25px rgba(142, 142, 147, 0.3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #007AFF;
+            border: 2px solid #007AFF;
+        }
+
+        .btn-outline:hover:not(:disabled) {
+            background: #007AFF;
+            color: white;
+        }
+
+        .command-block {
+            background: #1d1d1f;
+            color: #f5f5f7;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 20px 0;
+            font-family: 'SF Mono', Monaco, Menlo, Consolas, monospace;
+            position: relative;
+            font-size: 14px;
+            line-height: 1.5;
+            overflow-x: auto;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: #007AFF;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .copy-btn:hover {
+            background: #0056D6;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+            padding-top: 24px;
+            border-top: 1px solid #d2d2d7;
+        }
+
+        .status {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin: 16px 0;
+            padding: 16px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .status.success {
+            background: linear-gradient(135deg, #d4f6db 0%, #ecfdf5 100%);
+            color: #166534;
+            border: 1px solid #34C759;
+        }
+
+        .status.error {
+            background: linear-gradient(135deg, #fde8e8 0%, #fef2f2 100%);
+            color: #991b1b;
+            border: 1px solid #FF3B30;
+        }
+
+        .status.info {
+            background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
+            color: #1e40af;
+            border: 1px solid #007AFF;
+        }
+
+        .status.warning {
+            background: linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%);
+            color: #92400e;
+            border: 1px solid #FF9500;
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .config-card {
+            background: white;
+            border: 2px solid #f5f5f7;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .config-card:hover {
+            border-color: #007AFF;
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .config-card h4 {
+            color: #1d1d1f;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .config-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f5f5f7;
+        }
+
+        .config-item:last-child {
+            border-bottom: none;
+        }
+
+        .config-label {
+            font-weight: 500;
+            color: #6e6e73;
+        }
+
+        .config-value {
+            color: #1d1d1f;
+            font-weight: 600;
+            font-family: 'SF Mono', Monaco, monospace;
+        }
+
+        .terminal-output {
+            background: #1d1d1f;
+            color: #34C759;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 14px;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            border: 1px solid #2d2d30;
+        }
+
+        .terminal-output.active {
+            display: block;
+        }
+
+        .completion-summary {
+            background: linear-gradient(135deg, #d4f6db 0%, #ecfdf5 100%);
+            border: 2px solid #34C759;
+            border-radius: 16px;
+            padding: 24px;
+            margin: 24px 0;
+        }
+
+        .completion-summary h3 {
+            color: #166534;
+            margin-bottom: 16px;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feature-list li {
+            padding: 8px 0;
+            color: #166534;
+            font-weight: 500;
+        }
+
+        .feature-list li::before {
+            content: "✓";
+            color: #34C759;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+
+        .next-steps {
+            background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
+            border: 2px solid #007AFF;
+            border-radius: 16px;
+            padding: 24px;
+            margin: 24px 0;
+        }
+
+        .next-steps h3 {
+            color: #1e40af;
+            margin-bottom: 16px;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .next-steps ol {
+            color: #1e40af;
+            padding-left: 20px;
+        }
+
+        .next-steps li {
+            margin-bottom: 8px;
+            font-weight: 500;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 16px;
+            }
+            
+            .header {
+                padding: 30px 20px;
+                border-radius: 16px 16px 0 0;
+            }
+            
+            .content {
+                padding: 30px 20px;
+            }
+            
+            .header h1 {
+                font-size: 2.2rem;
+            }
+            
+            .config-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .navigation {
+                flex-direction: column;
+                gap: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-content">
+                <div class="logo-area">
+                    <div class="logo-text">ScalarDB</div>
+                </div>
+                <h1>macOS Installation Wizard</h1>
+                <p>Native Apple Silicon optimized setup for maximum performance</p>
+            </div>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="step-info">
+                <span id="stepInfo">Step 1 of 7: System Requirements Check</span>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- Step 1: System Requirements -->
+            <div class="step active" id="step1">
+                <h2>🍎 System Requirements Check</h2>
+                <p class="step-description">
+                    Let's verify your macOS system is ready for ScalarDB installation. This wizard is optimized for Apple Silicon Macs (M1, M2, M3) and will provide the best performance on native macOS.
+                </p>
+                
+                <div class="requirements-check">
+                    <h3>System Requirements Verification</h3>
+                    <div class="requirements-item">
+                        <div class="check-icon unknown" id="osCheck">?</div>
+                        <span>macOS 12.0 Monterey or later (Apple Silicon recommended)</span>
+                    </div>
+                    <div class="requirements-item">
+                        <div class="check-icon unknown" id="ramCheck">?</div>
+                        <span>At least 4GB RAM (8GB recommended for optimal performance)</span>
+                    </div>
+                    <div class="requirements-item">
+                        <div class="check-icon unknown" id="diskCheck">?</div>
+                        <span>At least 10GB available disk space</span>
+                    </div>
+                    <div class="requirements-item">
+                        <div class="check-icon unknown" id="homebrewCheck">?</div>
+                        <span>Homebrew package manager (will be installed if missing)</span>
+                    </div>
+                    <div class="requirements-item">
+                        <div class="check-icon unknown" id="dockerCheck">?</div>
+                        <span>Docker Desktop compatible with Apple Silicon</span>
+                    </div>
+                </div>
+
+                <button class="btn" onclick="checkSystemRequirements()">🔍 Run System Check</button>
+                
+                <div class="navigation">
+                    <div></div>
+                    <button class="btn" id="step1Next" onclick="nextStep()" disabled>Continue to Setup</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Install Prerequisites -->
+            <div class="step" id="step2">
+                <h2>🛠 Install Prerequisites</h2>
+                <p class="step-description">
+                    We'll install the essential tools needed for ScalarDB development: Homebrew, Node.js, and Docker Desktop.
+                </p>
+
+                <div class="status info">
+                    <div>
+                        <strong>Installing Prerequisites:</strong> This step will install the necessary development tools on your Mac. Each tool is essential for ScalarDB functionality.
+                    </div>
+                </div>
+
+                <div class="config-grid">
+                    <div class="config-card">
+                        <h4>🍺 Homebrew Package Manager</h4>
+                        <p>Essential for managing macOS development tools</p>
+                        <div class="command-block">
+                            <button class="copy-btn" onclick="copyCommand('homebrew-install')">Copy</button>
+                            <div id="homebrew-install">/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"</div>
+                        </div>
+                        <button class="btn btn-outline" onclick="installHomebrew()">Install Homebrew</button>
+                    </div>
+
+                    <div class="config-card">
+                        <h4>📦 Node.js LTS</h4>
+                        <p>JavaScript runtime for the dashboard applications</p>
+                        <div class="command-block">
+                            <button class="copy-btn" onclick="copyCommand('node-install')">Copy</button>
+                            <div id="node-install">brew install node</div>
+                        </div>
+                        <button class="btn btn-outline" onclick="installNode()">Install Node.js</button>
+                    </div>
+
+                    <div class="config-card">
+                        <h4>🐳 Docker Desktop</h4>
+                        <p>Container platform with Apple Silicon optimization</p>
+                        <div class="command-block">
+                            <button class="copy-btn" onclick="copyCommand('docker-install')">Copy</button>
+                            <div id="docker-install">brew install --cask docker</div>
+                        </div>
+                        <button class="btn btn-outline" onclick="installDocker()">Install Docker</button>
+                    </div>
+                </div>
+
+                <div class="terminal-output" id="prerequisitesOutput"></div>
+
+                <div class="navigation">
+                    <button class="btn btn-secondary" onclick="prevStep()">Previous Step</button>
+                    <button class="btn" onclick="nextStep()">Continue to Java Setup</button>
+                </div>
+            </div>
+
+            <!-- Step 3: Java Installation -->
+            <div class="step" id="step3">
+                <h2>☕ Java Development Kit</h2>
+                <p class="step-description">
+                    ScalarDB requires OpenJDK for optimal performance. We'll install the latest LTS version optimized for Apple Silicon.
+                </p>
+
+                <div class="config-grid">
+                    <div class="config-card">
+                        <h4>Selected Configuration</h4>
+                        <div class="config-item">
+                            <span class="config-label">Java Version:</span>
+                            <span class="config-value">OpenJDK 21 LTS</span>
+                        </div>
+                        <div class="config-item">
+                            <span class="config-label">Provider:</span>
+                            <span class="config-value">Eclipse Temurin</span>
+                        </div>
+                        <div class="config-item">
+                            <span class="config-label">Architecture:</span>
+                            <span class="config-value">Apple Silicon (ARM64)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="command-block">
+                    <button class="copy-btn" onclick="copyCommand('java-install')">Copy</button>
+                    <div id="java-install">brew install openjdk@21</div>
+                </div>
+
+                <button class="btn" onclick="installJava()">Install OpenJDK 21</button>
+                <button class="btn btn-outline" onclick="verifyJavaInstallation()">Verify Installation</button>
+
+                <div class="terminal-output" id="javaOutput"></div>
+
+                <div class="navigation">
+                    <button class="btn btn-secondary" onclick="prevStep()">Previous Step</button>
+                    <button class="btn" onclick="nextStep()">Continue to Docker Setup</button>
+                </div>
+            </div>
+
+            <!-- Step 4: Docker Configuration -->
+            <div class="step" id="step4">
+                <h2>🐳 Docker Desktop Setup</h2>
+                <p class="step-description">
+                    Configure Docker Desktop for optimal performance on Apple Silicon. We'll ensure it's running and ready for ScalarDB containers.
+                </p>
+
+                <div class="status warning">
+                    <div>
+                        <strong>Important:</strong> Make sure Docker Desktop is started and running before proceeding. You should see the Docker whale icon in your menu bar.
+                    </div>
+                </div>
+
+                <div class="config-grid">
+                    <div class="config-card">
+                        <h4>🔧 Docker Configuration</h4>
+                        <div class="config-item">
+                            <span class="config-label">Virtualization:</span>
+                            <span class="config-value">Apple Virtualization.framework</span>
+                        </div>
+                        <div class="config-item">
+                            <span class="config-label">File Sharing:</span>
+                            <span class="config-value">VirtioFS (Recommended)</span>
+                        </div>
+                        <div class="config-item">
+                            <span class="config-label">Resource Allocation:</span>
+                            <span class="config-value">4GB RAM, 2 CPUs minimum</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn" onclick="startDocker()">🚀 Start Docker Desktop</button>
+                <button class="btn btn-outline" onclick="verifyDockerInstallation()">Verify Docker</button>
+
+                <div class="terminal-output" id="dockerOutput"></div>
+
+                <div class="navigation">
+                    <button class="btn btn-secondary" onclick="prevStep()">Previous Step</button>
+                    <button class="btn" onclick="nextStep()">Continue to Database Setup</button>
+                </div>
+            </div>
+
+            <!-- Step 5: PostgreSQL Database -->
+            <div class="step" id="step5">
+                <h2>🐘 PostgreSQL Database Setup</h2>
+                <p class="step-description">
+                    Deploy PostgreSQL using Docker with Apple Silicon optimization. This will serve as the backend database for ScalarDB.
+                </p>
+
+                <div class="config-grid">
+                    <div class="config-card">
+                        <h4>📊 Database Configuration</h4>
+                        <div class="config-item">
+                            <span class="config-label">Image:</span>
+                            <span class="config-value">postgres:15-alpine</span>
+                        </div>
+                        <div class="config-item">
+                            <span class="config-label">Port:</span>
+                            <span class="config-value">5432</span>
+                        </div>
+                        <div class="config-item">
+                            <span class="config-label">Database:</span>
+                            <span class="config-value">scalardb</span>
+                        </div>
+                        <div class="config-item">
+                            <span class="config-label">Username:</span>
+                            <span class="config-value">postgres</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="command-block">
+                    <button class="copy-btn" onclick="copyCommand('postgres-start')">Copy</button>
+                    <div id="postgres-start">docker run -d --name scalardb-postgres \
+  -e POSTGRES_DB=scalardb \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=postgres \
+  -p 5432:5432 \
+  --platform linux/arm64 \
+  postgres:15-alpine</div>
+                </div>
+
+                <button class="btn" onclick="startPostgreSQL()">🚀 Start PostgreSQL</button>
+                <button class="btn btn-outline" onclick="createSampleTables()">Create Sample Tables</button>
+                <button class="btn btn-outline" onclick="verifyDatabaseConnection()">Test Connection</button>
+
+                <div class="terminal-output" id="dbOutput"></div>
+
+                <div class="navigation">
+                    <button class="btn btn-secondary" onclick="prevStep()">Previous Step</button>
+                    <button class="btn" onclick="nextStep()">Continue to ScalarDB Setup</button>
+                </div>
+            </div>
+
+            <!-- Step 6: ScalarDB Installation -->
+            <div class="step" id="step6">
+                <h2>⚡ ScalarDB Configuration</h2>
+                <p class="step-description">
+                    Set up ScalarDB sample applications and create the web dashboard. This includes the test dashboard and medical records demo.
+                </p>
+
+                <div class="config-grid">
+                    <div class="config-card">
+                        <h4>🎯 Installation Summary</h4>
+                        <div class="config-item">
+                            <span class="config-label">ScalarDB Version:</span>
+                            <span class="config-value">3.16.0 (Latest)</span>
+                        </div>
+                        <div class="config-item">
+                            <span class="config-label">Backend:</span>
+                            <span class="config-value">PostgreSQL (JDBC)</span>
+                        </div>
+                        <div class="config-item">
+                            <span class="config-label">Demo Applications:</span>
+                            <span class="config-value">Dashboard + Medical Records</span>
+                        </div>
+                        <div class="config-item">
+                            <span class="config-label">Architecture:</span>
+                            <span class="config-value">Apple Silicon Optimized</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn" onclick="downloadScalarDBSamples()">📥 Download ScalarDB Samples</button>
+                <button class="btn" onclick="createWebApplications()">🖥 Create Web Applications</button>
+                <button class="btn" onclick="installDependencies()">📦 Install Dependencies</button>
+
+                <div class="terminal-output" id="scalardbOutput"></div>
+
+                <div class="navigation">
+                    <button class="btn btn-secondary" onclick="prevStep()">Previous Step</button>
+                    <button class="btn" onclick="nextStep()">Complete Installation</button>
+                </div>
+            </div>
+
+            <!-- Step 7: Launch Applications -->
+            <div class="step" id="step7">
+                <h2>🚀 Launch & Test Applications</h2>
+                <p class="step-description">
+                    Start your ScalarDB applications and verify everything is working correctly. Your development environment is now ready!
+                </p>
+
+                <div class="completion-summary">
+                    <h3>🎉 Installation Complete!</h3>
+                    <ul class="feature-list">
+                        <li>macOS optimized for Apple Silicon performance</li>
+                        <li>Docker Desktop with native ARM64 support</li>
+                        <li>PostgreSQL database with ScalarDB integration</li>
+                        <li>OpenJDK 21 LTS for optimal compatibility</li>
+                        <li>Web-based test dashboard with analytics</li>
+                        <li>Medical records demo application</li>
+                        <li>Sample data and schemas pre-loaded</li>
+                    </ul>
+                </div>
+
+                <div class="config-grid">
+                    <div class="config-card">
+                        <h4>🌐 Application URLs</h4>
+                        <div class="config-item">
+                            <span class="config-label">Test Dashboard:</span>
+                            <span class="config-value">http://localhost:3000</span>
+                        </div>
+                        <div class="config-item">
+                            <span class="config-label">Medical Records:</span>
+                            <span class="config-value">http://localhost:3001</span>
+                        </div>
+                        <div class="config-item">
+                            <span class="config-label">PostgreSQL:</span>
+                            <span class="config-value">localhost:5432</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn" onclick="startApplications()">🚀 Start Applications</button>
+                <button class="btn btn-outline" onclick="testAllConnections()">🧪 Test All Connections</button>
+                <button class="btn btn-outline" onclick="openDashboard()
