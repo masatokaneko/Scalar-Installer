@@ -1,14 +1,19 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const http = require('http');
 const { JavaInstaller } = require('../core/java-installer');
 const { ScalarDBInstaller } = require('../core/scalardb-installer');
 const { ConfigGenerator } = require('../core/config-generator');
 const { PrerequisitesInstaller } = require('../core/prerequisites-installer');
 const { SchemaManager } = require('../core/schema-manager');
+const { WebSocketServer } = require('../core/websocket-server');
 
 const app = express();
 const port = 3002;
+
+// HTTPサーバーを作成
+const httpServer = http.createServer(app);
 
 // Middleware
 app.use(cors());
@@ -21,6 +26,9 @@ const scalardbInstaller = new ScalarDBInstaller();
 const configGenerator = new ConfigGenerator();
 const prerequisitesInstaller = new PrerequisitesInstaller();
 const schemaManager = new SchemaManager();
+
+// WebSocketサーバーを初期化
+const wsServer = new WebSocketServer(httpServer);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -416,8 +424,8 @@ app.post('/api/install/start', async (req, res) => {
             startTime: new Date().toISOString()
         };
         
-        // Simulate installation process
-        setTimeout(() => simulateInstallation(installationId, installConfig), 100);
+        // Execute real installation process
+        setTimeout(() => executeRealInstallation(installationId, installConfig), 100);
         
         res.json({ 
             success: true, 
@@ -453,46 +461,140 @@ app.get('/api/install/progress/:id', (req, res) => {
     }
 });
 
-// Simulate installation process
-async function simulateInstallation(installationId, config) {
+// Real installation process with WebSocket notifications
+async function executeRealInstallation(installationId, config) {
     const progress = global.installationProgress[installationId];
     
-    const steps = [
-        { name: 'Java環境の確認', duration: 1000 },
-        { name: 'ScalarDBのダウンロード', duration: 3000 },
-        { name: 'データベース設定の生成', duration: 1500 },
-        { name: 'インストールの実行', duration: 4000 },
-        { name: 'データベース接続の確認', duration: 2000 },
-        { name: 'インストール完了', duration: 500 }
-    ];
-    
-    for (let i = 0; i < steps.length; i++) {
-        const step = steps[i];
+    try {
+        // WebSocketでインストール開始を通知
+        wsServer.startInstallation(installationId, config);
         
-        progress.status = 'running';
-        progress.currentStep = step.name;
-        progress.progress = Math.floor((i / steps.length) * 100);
-        progress.steps.push({
-            name: step.name,
-            status: 'running',
-            startTime: new Date().toISOString()
+        // Step 1: Java環境の確認
+        wsServer.updateProgress(installationId, {
+            step: 'Java環境の確認',
+            progress: 10,
+            status: 'running'
         });
         
-        await new Promise(resolve => setTimeout(resolve, step.duration));
+        const javaCheck = await javaInstaller.checkJavaVersion();
+        if (!javaCheck.installed) {
+            throw new Error('Javaがインストールされていません');
+        }
         
-        progress.steps[i].status = 'completed';
-        progress.steps[i].endTime = new Date().toISOString();
+        wsServer.updateProgress(installationId, {
+            step: 'Java環境の確認',
+            progress: 15,
+            status: 'completed',
+            message: `${javaCheck.vendor} ${javaCheck.version} を検出`
+        });
+        
+        // Step 2: ScalarDBのインストール
+        wsServer.updateProgress(installationId, {
+            step: 'ScalarDBのダウンロード',
+            progress: 25,
+            status: 'running'
+        });
+        
+        const installResult = await scalardbInstaller.installScalarDB(config);
+        
+        wsServer.updateProgress(installationId, {
+            step: 'ScalarDBのダウンロード',
+            progress: 40,
+            status: 'completed',
+            message: 'ScalarDBのダウンロードが完了しました'
+        });
+        
+        // Step 3: 設定ファイルの生成
+        wsServer.updateProgress(installationId, {
+            step: 'データベース設定の生成',
+            progress: 50,
+            status: 'running'
+        });
+        
+        const dbConfig = configGenerator.generateDatabaseProperties(config);
+        
+        wsServer.updateProgress(installationId, {
+            step: 'データベース設定の生成',
+            progress: 60,
+            status: 'completed',
+            message: '設定ファイルを生成しました'
+        });
+        
+        // Step 4: データベース接続確認
+        wsServer.updateProgress(installationId, {
+            step: 'データベース接続の確認',
+            progress: 70,
+            status: 'running'
+        });
+        
+        const { DatabaseTester } = require('../core/database-tester');
+        const tester = new DatabaseTester();
+        const connectionResult = await tester.testConnection(config.database);
+        
+        if (!connectionResult.connected) {
+            throw new Error(`データベース接続に失敗: ${connectionResult.message}`);
+        }
+        
+        wsServer.updateProgress(installationId, {
+            step: 'データベース接続の確認',
+            progress: 85,
+            status: 'completed',
+            message: 'データベース接続を確認しました'
+        });
+        
+        // Step 5: スキーマ作成（オプション）
+        if (config.createSchema !== false) {
+            wsServer.updateProgress(installationId, {
+                step: 'スキーマの作成',
+                progress: 90,
+                status: 'running'
+            });
+            
+            try {
+                const schemaResult = await schemaManager.createSchema(
+                    config.database,
+                    config.schemaPath || null
+                );
+                
+                wsServer.updateProgress(installationId, {
+                    step: 'スキーマの作成',
+                    progress: 95,
+                    status: 'completed',
+                    message: 'スキーマを作成しました'
+                });
+            } catch (error) {
+                wsServer.sendLog(installationId, {
+                    level: 'warning',
+                    message: `スキーマ作成をスキップ: ${error.message}`
+                });
+            }
+        }
+        
+        // インストール完了
+        const result = {
+            success: true,
+            installPath: config.installPath || '/usr/local/scalardb',
+            configFiles: ['database.properties'],
+            version: installResult.version || '3.16.0'
+        };
+        
+        progress.status = 'completed';
+        progress.progress = 100;
+        progress.endTime = new Date().toISOString();
+        progress.result = result;
+        
+        wsServer.completeInstallation(installationId, result);
+        
+    } catch (error) {
+        progress.status = 'error';
+        progress.error = error.message;
+        
+        wsServer.sendError(installationId, {
+            step: progress.currentStep || 'インストール',
+            message: error.message,
+            details: error.stack
+        });
     }
-    
-    progress.status = 'completed';
-    progress.progress = 100;
-    progress.endTime = new Date().toISOString();
-    progress.result = {
-        success: true,
-        installPath: '/usr/local/scalardb',
-        configFiles: ['database.properties', 'schema.json'],
-        version: '3.16.0'
-    };
 }
 
 // Error handling middleware
@@ -506,7 +608,7 @@ app.use((err, req, res, next) => {
 
 // Start server only if not in test environment
 if (process.env.NODE_ENV !== 'test' && require.main === module) {
-    app.listen(port, () => {
+    httpServer.listen(port, () => {
         console.log(`🚀 ScalarDB Installer API running at http://localhost:${port}`);
         console.log('Available endpoints:');
         console.log('  GET  /api/health                    - API health check');
@@ -520,6 +622,7 @@ if (process.env.NODE_ENV !== 'test' && require.main === module) {
         console.log('  POST /api/install/start             - Start installation');
         console.log('');
         console.log('🌐 Web UI available at: http://localhost:3002/installer/ui/installer-wizard.html');
+        console.log('🔌 WebSocket server is running on the same port');
     });
 }
 

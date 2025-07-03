@@ -13,8 +13,11 @@ class InstallerWizard {
             advanced: {}
         };
         this.installationInProgress = false;
+        this.socket = null;
+        this.installationId = null;
         
         this.init();
+        this.initWebSocket();
     }
     
     init() {
@@ -91,6 +94,102 @@ class InstallerWizard {
             return `${navigator.deviceMemory} GB (概算)`;
         }
         return 'Unknown';
+    }
+    
+    initWebSocket() {
+        // WebSocketサーバーに接続
+        this.socket = io();
+        
+        this.socket.on('connect', () => {
+            console.log('WebSocketサーバーに接続しました');
+        });
+        
+        this.socket.on('welcome', (data) => {
+            console.log('Welcome:', data.message);
+        });
+        
+        // インストール進捗イベントをリッスン
+        this.socket.on('installation:progress', (data) => {
+            if (data.installationId === this.installationId) {
+                this.updateProgressFromWebSocket(data);
+            }
+        });
+        
+        this.socket.on('installation:error', (data) => {
+            if (data.installationId === this.installationId) {
+                this.handleInstallationError(data);
+            }
+        });
+        
+        this.socket.on('installation:completed', (data) => {
+            if (data.installationId === this.installationId) {
+                this.handleInstallationComplete(data);
+            }
+        });
+        
+        this.socket.on('installation:log', (data) => {
+            if (data.installationId === this.installationId) {
+                this.addLogFromWebSocket(data);
+            }
+        });
+        
+        this.socket.on('disconnect', () => {
+            console.log('WebSocketサーバーから切断されました');
+        });
+    }
+    
+    updateProgressFromWebSocket(data) {
+        const progressFill = document.getElementById('progress-fill');
+        const progressText = document.getElementById('progress-text');
+        const logContainer = document.getElementById('log-container');
+        
+        if (progressFill) {
+            progressFill.style.width = data.progress + '%';
+        }
+        
+        if (progressText) {
+            progressText.textContent = data.step;
+        }
+        
+        if (logContainer && data.message) {
+            this.addLogEntry(logContainer, `${data.step}: ${data.message}`, data.status === 'completed' ? 'success' : 'info');
+        }
+    }
+    
+    handleInstallationError(data) {
+        const logContainer = document.getElementById('log-container');
+        if (logContainer) {
+            this.addLogEntry(logContainer, `エラー: ${data.error}`, 'error');
+        }
+        this.installationInProgress = false;
+        
+        // エラーダイアログを表示
+        alert(`インストール中にエラーが発生しました:\n${data.error}`);
+    }
+    
+    handleInstallationComplete(data) {
+        const logContainer = document.getElementById('log-container');
+        if (logContainer) {
+            this.addLogEntry(logContainer, 'インストールが完了しました！', 'success');
+        }
+        
+        this.installationInProgress = false;
+        this.installConfig.installationComplete = true;
+        this.installConfig.result = data.result;
+        
+        // 完了ステップに移動
+        setTimeout(() => {
+            this.currentStep = 6;
+            this.updateStepDisplay();
+            this.generateCompletionInfo();
+        }, 1000);
+    }
+    
+    addLogFromWebSocket(data) {
+        const logContainer = document.getElementById('log-container');
+        if (logContainer) {
+            this.addLogEntry(logContainer, data.message, data.level);
+        }
     }
     
     updateStepDisplay() {
@@ -404,71 +503,55 @@ class InstallerWizard {
         startBtn.style.display = 'none';
         cancelBtn.style.display = 'inline-flex';
         
-        const steps = [
-            { name: 'Java環境の確認', progress: 10 },
-            { name: 'ScalarDBのダウンロード', progress: 25 },
-            { name: 'データベース設定の生成', progress: 40 },
-            { name: 'インストールの実行', progress: 55 },
-            { name: 'データベース接続の確認', progress: 70 },
-            { name: 'スキーマの作成', progress: 85 },
-            { name: 'インストール完了', progress: 100 }
-        ];
+        // ログをクリア
+        logContainer.innerHTML = '';
         
-        for (let i = 0; i < steps.length; i++) {
-            const step = steps[i];
+        try {
+            // インストールAPIを呼び出してインストールIDを取得
+            const response = await fetch('/api/install/start', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(this.installConfig)
+            });
             
-            progressText.textContent = step.name;
-            progressFill.style.width = step.progress + '%';
+            const data = await response.json();
             
-            this.addLogEntry(logContainer, `${step.name}を実行中...`);
-            
-            try {
-                await this.executeInstallStep(i);
-                this.addLogEntry(logContainer, `✓ ${step.name}が完了しました`, 'success');
-            } catch (error) {
-                this.addLogEntry(logContainer, `✗ ${step.name}でエラーが発生しました: ${error.message}`, 'error');
-                this.installationInProgress = false;
-                return;
+            if (!data.success) {
+                throw new Error(data.error || 'インストールの開始に失敗しました');
             }
             
-            // Wait for visual effect
-            await this.delay(1000);
+            this.installationId = data.installationId;
+            
+            // WebSocketルームに参加
+            this.socket.emit('join:installation', { 
+                installationId: this.installationId 
+            }, (response) => {
+                if (response.success) {
+                    console.log('インストールルームに参加しました:', response.installationId);
+                } else {
+                    console.error('ルーム参加エラー:', response.error);
+                }
+            });
+            
+            // 初期ログエントリ
+            this.addLogEntry(logContainer, 'インストールを開始しました...', 'info');
+            progressText.textContent = 'インストール準備中...';
+            progressFill.style.width = '0%';
+            
+            // 以降の進捗更新はWebSocketイベントで処理される
+            
+        } catch (error) {
+            this.addLogEntry(logContainer, `エラー: ${error.message}`, 'error');
+            this.installationInProgress = false;
+            startBtn.style.display = 'inline-flex';
+            cancelBtn.style.display = 'none';
+            
+            alert(`インストールの開始に失敗しました:\n${error.message}`);
         }
-        
-        this.installationInProgress = false;
-        cancelBtn.style.display = 'none';
-        
-        // Move to completion step
-        setTimeout(() => {
-            this.currentStep = 6;
-            this.updateStepDisplay();
-            this.generateCompletionInfo();
-        }, 1000);
     }
     
-    async executeInstallStep(stepIndex) {
-        // Simulate installation steps with API calls
-        switch (stepIndex) {
-            case 0: // Java check
-                await this.checkJavaEnvironment();
-                break;
-            case 1: // Download ScalarDB
-                await this.downloadScalarDB();
-                break;
-            case 2: // Generate config
-                await this.generateConfiguration();
-                break;
-            case 3: // Execute installation
-                await this.executeInstallation();
-                break;
-            case 4: // Verify database
-                await this.verifyDatabaseConnection();
-                break;
-            case 5: // Complete
-                await this.finalizeInstallation();
-                break;
-        }
-    }
     
     async checkJavaEnvironment() {
         try {
@@ -726,9 +809,6 @@ class InstallerWizard {
         details.innerHTML = detailsHTML;
     }
     
-    delay(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
 }
 
 // Environment check functions
@@ -1095,6 +1175,40 @@ async function checkHomebrew() {
         icon.textContent = '❌';
         details.textContent = `エラー: ${error.message}`;
         console.error('Homebrew check failed:', error);
+    }
+}
+
+async function cancelInstallation() {
+    const wizard = window.installerWizard;
+    
+    if (!wizard.installationInProgress || !wizard.installationId) {
+        return;
+    }
+    
+    if (confirm('インストールをキャンセルしますか？')) {
+        // WebSocketルームから退出
+        if (wizard.socket && wizard.socket.connected) {
+            wizard.socket.emit('leave:installation', { 
+                installationId: wizard.installationId 
+            });
+        }
+        
+        wizard.installationInProgress = false;
+        wizard.installationId = null;
+        
+        // UIをリセット
+        const startBtn = document.getElementById('start-install-btn');
+        const cancelBtn = document.getElementById('cancel-install-btn');
+        const progressFill = document.getElementById('progress-fill');
+        const progressText = document.getElementById('progress-text');
+        const logContainer = document.getElementById('log-container');
+        
+        startBtn.style.display = 'inline-flex';
+        cancelBtn.style.display = 'none';
+        progressFill.style.width = '0%';
+        progressText.textContent = '準備中...';
+        
+        wizard.addLogEntry(logContainer, 'インストールがキャンセルされました', 'warning');
     }
 }
 
