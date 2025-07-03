@@ -434,21 +434,23 @@ app.use((err, req, res, next) => {
     });
 });
 
-// Start server
-app.listen(port, () => {
-    console.log(`🚀 ScalarDB Installer API running at http://localhost:${port}`);
-    console.log('Available endpoints:');
-    console.log('  GET  /api/health                    - API health check');
-    console.log('  GET  /api/prerequisites/check       - Check all prerequisites');
-    console.log('  POST /api/prerequisites/install     - Install missing prerequisites');
-    console.log('  GET  /api/prerequisites/homebrew/check - Check Homebrew');
-    console.log('  POST /api/prerequisites/homebrew/install - Install Homebrew');
-    console.log('  GET  /api/java/check                - Check Java installation');
-    console.log('  POST /api/java/install              - Install Java');
-    console.log('  POST /api/database/test             - Test database connection');
-    console.log('  POST /api/install/start             - Start installation');
-    console.log('');
-    console.log('🌐 Web UI available at: http://localhost:3002/installer/ui/installer-wizard.html');
-});
+// Start server only if not in test environment
+if (process.env.NODE_ENV !== 'test' && require.main === module) {
+    app.listen(port, () => {
+        console.log(`🚀 ScalarDB Installer API running at http://localhost:${port}`);
+        console.log('Available endpoints:');
+        console.log('  GET  /api/health                    - API health check');
+        console.log('  GET  /api/prerequisites/check       - Check all prerequisites');
+        console.log('  POST /api/prerequisites/install     - Install missing prerequisites');
+        console.log('  GET  /api/prerequisites/homebrew/check - Check Homebrew');
+        console.log('  POST /api/prerequisites/homebrew/install - Install Homebrew');
+        console.log('  GET  /api/java/check                - Check Java installation');
+        console.log('  POST /api/java/install              - Install Java');
+        console.log('  POST /api/database/test             - Test database connection');
+        console.log('  POST /api/install/start             - Start installation');
+        console.log('');
+        console.log('🌐 Web UI available at: http://localhost:3002/installer/ui/installer-wizard.html');
+    });
+}
 
 module.exports = app;
