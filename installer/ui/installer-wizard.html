@@ -115,6 +115,19 @@
                         </div>
                     </div>
                     
+                    <div class="check-item" id="homebrew-check">
+                        <div class="check-icon">⏳</div>
+                        <div class="check-content">
+                            <h4>Homebrew</h4>
+                            <p>macOS用パッケージマネージャー</p>
+                            <div class="check-details"></div>
+                        </div>
+                        <div class="check-actions">
+                            <button class="btn-small" onclick="checkHomebrew()">チェック</button>
+                            <button class="btn-small btn-primary" onclick="installHomebrew()" style="display:none;">インストール</button>
+                        </div>
+                    </div>
+                    
                     <div class="check-item" id="docker-check">
                         <div class="check-icon">⏳</div>
                         <div class="check-content">
@@ -124,6 +137,7 @@
                         </div>
                         <div class="check-actions">
                             <button class="btn-small" onclick="checkDocker()">チェック</button>
+                            <button class="btn-small btn-primary" onclick="installDocker()" style="display:none;">インストール</button>
                         </div>
                     </div>
                     
@@ -136,6 +150,7 @@
                         </div>
                         <div class="check-actions">
                             <button class="btn-small" onclick="checkBuildTools()">チェック</button>
+                            <button class="btn-small btn-primary" onclick="installMaven()" style="display:none;">Maven インストール</button>
                         </div>
                     </div>
                 </div>

@@ -592,89 +592,156 @@ async function checkJava() {
     const javaCheck = document.getElementById('java-check');
     const icon = javaCheck.querySelector('.check-icon');
     const details = javaCheck.querySelector('.check-details');
+    const installBtn = javaCheck.querySelector('.btn-primary');
     
     icon.textContent = '⏳';
     details.textContent = 'Java環境を確認中...';
     
-    // Simulate check
-    setTimeout(() => {
-        // Mock result - in real implementation, this would call the JavaInstaller API
-        const hasJava = Math.random() > 0.3; // 70% chance of having Java
+    try {
+        const response = await fetch('/api/java/check');
+        const data = await response.json();
         
-        if (hasJava) {
+        if (data.success && data.result.installed) {
             javaCheck.className = 'check-item success';
             icon.textContent = '✅';
-            details.textContent = 'OpenJDK 17.0.8 が検出されました';
+            details.textContent = `${data.result.vendor || 'Java'} ${data.result.version} が検出されました`;
+            if (installBtn) installBtn.style.display = 'none';
         } else {
             javaCheck.className = 'check-item error';
             icon.textContent = '❌';
             details.textContent = 'Java が見つかりません';
-            javaCheck.querySelector('.btn-primary').style.display = 'inline-flex';
+            if (installBtn) installBtn.style.display = 'inline-flex';
         }
-    }, 1000);
+    } catch (error) {
+        javaCheck.className = 'check-item error';
+        icon.textContent = '❌';
+        details.textContent = `エラー: ${error.message}`;
+        console.error('Java check failed:', error);
+    }
 }
 
 async function installJava() {
     const javaCheck = document.getElementById('java-check');
     const icon = javaCheck.querySelector('.check-icon');
     const details = javaCheck.querySelector('.check-details');
+    const installBtn = javaCheck.querySelector('.btn-primary');
     
     icon.textContent = '⏳';
     details.textContent = 'Eclipse Temurin JDK 17 をインストール中...';
+    if (installBtn) installBtn.disabled = true;
     
-    // Simulate installation
-    setTimeout(() => {
-        javaCheck.className = 'check-item success';
-        icon.textContent = '✅';
-        details.textContent = 'Eclipse Temurin JDK 17.0.8 がインストールされました';
-        javaCheck.querySelector('.btn-primary').style.display = 'none';
-    }, 3000);
+    try {
+        const response = await fetch('/api/java/install', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ version: 17 })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.result.success) {
+            javaCheck.className = 'check-item success';
+            icon.textContent = '✅';
+            details.textContent = data.result.message || 'Eclipse Temurin JDK 17 がインストールされました';
+            if (installBtn) installBtn.style.display = 'none';
+        } else {
+            javaCheck.className = 'check-item error';
+            icon.textContent = '❌';
+            details.textContent = data.result?.message || 'インストールに失敗しました';
+            if (installBtn) installBtn.disabled = false;
+        }
+    } catch (error) {
+        javaCheck.className = 'check-item error';
+        icon.textContent = '❌';
+        details.textContent = `インストールエラー: ${error.message}`;
+        if (installBtn) installBtn.disabled = false;
+        console.error('Java installation failed:', error);
+    }
 }
 
 async function checkDocker() {
     const dockerCheck = document.getElementById('docker-check');
     const icon = dockerCheck.querySelector('.check-icon');
     const details = dockerCheck.querySelector('.check-details');
+    const installBtn = dockerCheck.querySelector('.btn-primary');
     
     icon.textContent = '⏳';
     details.textContent = 'Docker環境を確認中...';
     
-    setTimeout(() => {
-        const hasDocker = Math.random() > 0.5;
+    try {
+        const response = await fetch('/api/prerequisites/docker/check');
+        const data = await response.json();
         
-        if (hasDocker) {
+        if (data.success && data.result.installed) {
             dockerCheck.className = 'check-item success';
             icon.textContent = '✅';
-            details.textContent = 'Docker 20.10.24 が利用可能です';
+            const runningStatus = data.result.running ? '（実行中）' : '（停止中）';
+            details.textContent = `Docker ${data.result.version} が利用可能です ${runningStatus}`;
+            if (installBtn) installBtn.style.display = 'none';
         } else {
             dockerCheck.className = 'check-item error';
             icon.textContent = '❌';
             details.textContent = 'Docker が見つかりません（オプション）';
+            if (installBtn) installBtn.style.display = 'inline-flex';
         }
-    }, 800);
+    } catch (error) {
+        dockerCheck.className = 'check-item error';
+        icon.textContent = '❌';
+        details.textContent = `エラー: ${error.message}`;
+        console.error('Docker check failed:', error);
+    }
 }
 
 async function checkBuildTools() {
     const mavenCheck = document.getElementById('maven-check');
     const icon = mavenCheck.querySelector('.check-icon');
     const details = mavenCheck.querySelector('.check-details');
+    const installBtn = mavenCheck.querySelector('.btn-primary');
     
     icon.textContent = '⏳';
     details.textContent = 'ビルドツールを確認中...';
     
-    setTimeout(() => {
-        const hasMaven = Math.random() > 0.4;
+    try {
+        const [mavenResponse, gradleResponse] = await Promise.all([
+            fetch('/api/prerequisites/maven/check'),
+            fetch('/api/prerequisites/gradle/check')
+        ]);
         
-        if (hasMaven) {
+        const mavenData = await mavenResponse.json();
+        const gradleData = await gradleResponse.json();
+        
+        const hasMaven = mavenData.success && mavenData.result.installed;
+        const hasGradle = gradleData.success && gradleData.result.installed;
+        
+        if (hasMaven || hasGradle) {
             mavenCheck.className = 'check-item success';
             icon.textContent = '✅';
-            details.textContent = 'Maven 3.9.4 が利用可能です';
+            
+            let statusText = '';
+            if (hasMaven && hasGradle) {
+                statusText = `Maven ${mavenData.result.version} と Gradle ${gradleData.result.version} が利用可能です`;
+            } else if (hasMaven) {
+                statusText = `Maven ${mavenData.result.version} が利用可能です`;
+            } else {
+                statusText = `Gradle ${gradleData.result.version} が利用可能です`;
+            }
+            
+            details.textContent = statusText;
+            if (installBtn) installBtn.style.display = 'none';
         } else {
             mavenCheck.className = 'check-item error';
             icon.textContent = '❌';
             details.textContent = 'Maven/Gradle が見つかりません（プロジェクト統合用）';
+            if (installBtn) installBtn.style.display = 'inline-flex';
         }
-    }, 600);
+    } catch (error) {
+        mavenCheck.className = 'check-item error';
+        icon.textContent = '❌';
+        details.textContent = `エラー: ${error.message}`;
+        console.error('Build tools check failed:', error);
+    }
 }
 
 async function testConnection() {
@@ -735,10 +802,166 @@ document.addEventListener('DOMContentLoaded', () => {
     window.installerWizard = new InstallerWizard();
 });
 
+async function installHomebrew() {
+    const homebrewCheck = document.getElementById('homebrew-check');
+    const icon = homebrewCheck.querySelector('.check-icon');
+    const details = homebrewCheck.querySelector('.check-details');
+    const installBtn = homebrewCheck.querySelector('.btn-primary');
+    
+    icon.textContent = '⏳';
+    details.textContent = 'Homebrew をインストール中...';
+    if (installBtn) installBtn.disabled = true;
+    
+    try {
+        const response = await fetch('/api/prerequisites/homebrew/install', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.result.success) {
+            homebrewCheck.className = 'check-item success';
+            icon.textContent = '✅';
+            details.textContent = data.result.message || 'Homebrew がインストールされました';
+            if (installBtn) installBtn.style.display = 'none';
+        } else {
+            homebrewCheck.className = 'check-item error';
+            icon.textContent = '❌';
+            details.textContent = data.result?.message || 'インストールに失敗しました';
+            if (installBtn) installBtn.disabled = false;
+        }
+    } catch (error) {
+        homebrewCheck.className = 'check-item error';
+        icon.textContent = '❌';
+        details.textContent = `インストールエラー: ${error.message}`;
+        if (installBtn) installBtn.disabled = false;
+        console.error('Homebrew installation failed:', error);
+    }
+}
+
+async function installDocker() {
+    const dockerCheck = document.getElementById('docker-check');
+    const icon = dockerCheck.querySelector('.check-icon');
+    const details = dockerCheck.querySelector('.check-details');
+    const installBtn = dockerCheck.querySelector('.btn-primary');
+    
+    icon.textContent = '⏳';
+    details.textContent = 'Docker をインストール中...';
+    if (installBtn) installBtn.disabled = true;
+    
+    try {
+        const response = await fetch('/api/prerequisites/docker/install', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.result.success) {
+            dockerCheck.className = 'check-item success';
+            icon.textContent = '✅';
+            details.textContent = data.result.message || 'Docker がインストールされました';
+            if (installBtn) installBtn.style.display = 'none';
+        } else {
+            dockerCheck.className = 'check-item error';
+            icon.textContent = '❌';
+            details.textContent = data.result?.message || 'インストールに失敗しました';
+            if (installBtn) installBtn.disabled = false;
+        }
+    } catch (error) {
+        dockerCheck.className = 'check-item error';
+        icon.textContent = '❌';
+        details.textContent = `インストールエラー: ${error.message}`;
+        if (installBtn) installBtn.disabled = false;
+        console.error('Docker installation failed:', error);
+    }
+}
+
+async function installMaven() {
+    const mavenCheck = document.getElementById('maven-check');
+    const icon = mavenCheck.querySelector('.check-icon');
+    const details = mavenCheck.querySelector('.check-details');
+    const installBtn = mavenCheck.querySelector('.btn-primary');
+    
+    icon.textContent = '⏳';
+    details.textContent = 'Maven をインストール中...';
+    if (installBtn) installBtn.disabled = true;
+    
+    try {
+        const response = await fetch('/api/prerequisites/maven/install', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.result.success) {
+            mavenCheck.className = 'check-item success';
+            icon.textContent = '✅';
+            details.textContent = data.result.message || 'Maven がインストールされました';
+            if (installBtn) installBtn.style.display = 'none';
+        } else {
+            mavenCheck.className = 'check-item error';
+            icon.textContent = '❌';
+            details.textContent = data.result?.message || 'インストールに失敗しました';
+            if (installBtn) installBtn.disabled = false;
+        }
+    } catch (error) {
+        mavenCheck.className = 'check-item error';
+        icon.textContent = '❌';
+        details.textContent = `インストールエラー: ${error.message}`;
+        if (installBtn) installBtn.disabled = false;
+        console.error('Maven installation failed:', error);
+    }
+}
+
+async function checkHomebrew() {
+    const homebrewCheck = document.getElementById('homebrew-check');
+    const icon = homebrewCheck.querySelector('.check-icon');
+    const details = homebrewCheck.querySelector('.check-details');
+    const installBtn = homebrewCheck.querySelector('.btn-primary');
+    
+    icon.textContent = '⏳';
+    details.textContent = 'Homebrew環境を確認中...';
+    
+    try {
+        const response = await fetch('/api/prerequisites/homebrew/check');
+        const data = await response.json();
+        
+        if (data.success && data.result.installed) {
+            homebrewCheck.className = 'check-item success';
+            icon.textContent = '✅';
+            details.textContent = `Homebrew ${data.result.version} が利用可能です`;
+            if (installBtn) installBtn.style.display = 'none';
+        } else {
+            homebrewCheck.className = 'check-item error';
+            icon.textContent = '❌';
+            details.textContent = 'Homebrew が見つかりません';
+            if (installBtn) installBtn.style.display = 'inline-flex';
+        }
+    } catch (error) {
+        homebrewCheck.className = 'check-item error';
+        icon.textContent = '❌';
+        details.textContent = `エラー: ${error.message}`;
+        console.error('Homebrew check failed:', error);
+    }
+}
+
 // Expose functions globally
 window.checkJava = checkJava;
 window.installJava = installJava;
+window.checkHomebrew = checkHomebrew;
 window.checkDocker = checkDocker;
+window.installHomebrew = installHomebrew;
+window.installDocker = installDocker;
+window.installMaven = installMaven;
 window.checkBuildTools = checkBuildTools;
 window.testConnection = testConnection;
 window.startInstallation = () => window.installerWizard.startInstallation();
