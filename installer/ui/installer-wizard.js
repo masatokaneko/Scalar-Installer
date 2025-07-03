@@ -406,10 +406,11 @@ class InstallerWizard {
         
         const steps = [
             { name: 'Java環境の確認', progress: 10 },
-            { name: 'ScalarDBのダウンロード', progress: 30 },
-            { name: 'データベース設定の生成', progress: 50 },
-            { name: 'インストールの実行', progress: 70 },
-            { name: 'データベース接続の確認', progress: 90 },
+            { name: 'ScalarDBのダウンロード', progress: 25 },
+            { name: 'データベース設定の生成', progress: 40 },
+            { name: 'インストールの実行', progress: 55 },
+            { name: 'データベース接続の確認', progress: 70 },
+            { name: 'スキーマの作成', progress: 85 },
             { name: 'インストール完了', progress: 100 }
         ];
         
@@ -637,14 +638,38 @@ class InstallerWizard {
     }
     
     async finalizeInstallation() {
-        // Simulate finalization
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                this.installConfig.installationComplete = true;
-                this.installConfig.installationTime = new Date().toISOString();
-                resolve();
-            }, 500);
-        });
+        try {
+            // スキーマの作成（オプション）
+            if (this.installConfig.createSchema !== false) {
+                const schemaResponse = await fetch('/api/database/schema/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        database: this.installConfig.database,
+                        schemaPath: this.installConfig.schemaPath // nullの場合はデフォルトスキーマを使用
+                    })
+                });
+                
+                const schemaData = await schemaResponse.json();
+                
+                if (schemaData.success) {
+                    this.installConfig.schemaCreated = true;
+                    this.installConfig.createdTables = schemaData.result.tables || schemaData.result.containers;
+                } else {
+                    console.warn('スキーマ作成に失敗しましたが、インストールを続行します:', schemaData.error);
+                }
+            }
+            
+            this.installConfig.installationComplete = true;
+            this.installConfig.installationTime = new Date().toISOString();
+        } catch (error) {
+            console.error('ファイナライズ中のエラー:', error);
+            // エラーが発生してもインストールは完了とマーク
+            this.installConfig.installationComplete = true;
+            this.installConfig.installationTime = new Date().toISOString();
+        }
     }
     
     addLogEntry(container, message, type = 'info') {
@@ -684,6 +709,12 @@ class InstallerWizard {
             <div class="detail-item">
                 <span>保存されたファイル:</span>
                 <span>${config.savedFiles.map(f => f.path || f).join('<br>')}</span>
+            </div>
+            ` : ''}
+            ${config.createdTables ? `
+            <div class="detail-item">
+                <span>作成されたテーブル:</span>
+                <span>${config.createdTables.join(', ')}</span>
             </div>
             ` : ''}
             <div class="detail-item">

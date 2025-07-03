@@ -5,6 +5,7 @@ const { JavaInstaller } = require('../core/java-installer');
 const { ScalarDBInstaller } = require('../core/scalardb-installer');
 const { ConfigGenerator } = require('../core/config-generator');
 const { PrerequisitesInstaller } = require('../core/prerequisites-installer');
+const { SchemaManager } = require('../core/schema-manager');
 
 const app = express();
 const port = 3002;
@@ -19,6 +20,7 @@ const javaInstaller = new JavaInstaller();
 const scalardbInstaller = new ScalarDBInstaller();
 const configGenerator = new ConfigGenerator();
 const prerequisitesInstaller = new PrerequisitesInstaller();
+const schemaManager = new SchemaManager();
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -320,6 +322,51 @@ app.post('/api/config/save-all', async (req, res) => {
         }
         
         res.json({ success: true, results });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+// Database schema endpoints
+app.post('/api/database/schema/create', async (req, res) => {
+    try {
+        const { database, schemaPath } = req.body;
+        
+        // スキーマパスが指定されていない場合はデフォルトスキーマを生成
+        let actualSchemaPath = schemaPath;
+        if (!schemaPath) {
+            const defaultSchema = schemaManager.generateDefaultSchema(database.type);
+            const tempPath = path.join('/tmp', 'default-schema.json');
+            await require('fs').promises.writeFile(tempPath, JSON.stringify(defaultSchema, null, 2));
+            actualSchemaPath = tempPath;
+        }
+        
+        const result = await schemaManager.createSchema(database, actualSchemaPath);
+        
+        res.json({ 
+            success: result.success, 
+            result 
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+app.post('/api/database/schema/generate-default', async (req, res) => {
+    try {
+        const { databaseType } = req.body;
+        const schema = schemaManager.generateDefaultSchema(databaseType);
+        
+        res.json({ 
+            success: true, 
+            schema 
+        });
     } catch (error) {
         res.status(500).json({ 
             success: false, 
