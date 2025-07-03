@@ -293,33 +293,56 @@ app.post('/api/config/save', async (req, res) => {
     }
 });
 
-// Database connection test endpoint
+// Save all generated configurations
+app.post('/api/config/save-all', async (req, res) => {
+    try {
+        const { installConfig, outputDir } = req.body;
+        const results = [];
+        
+        // Save database.properties
+        if (installConfig.generatedConfigs?.databaseProperties) {
+            const dbResult = await configGenerator.saveConfiguration(
+                installConfig,
+                'database-properties',
+                path.join(outputDir || '/tmp/scalardb-config', 'database.properties')
+            );
+            results.push(dbResult);
+        }
+        
+        // Save docker-compose.yml if needed
+        if (installConfig.deployment === 'docker' && installConfig.generatedConfigs?.dockerCompose) {
+            const dockerResult = await configGenerator.saveConfiguration(
+                installConfig,
+                'docker-compose',
+                path.join(outputDir || '/tmp/scalardb-config', 'docker-compose.yml')
+            );
+            results.push(dockerResult);
+        }
+        
+        res.json({ success: true, results });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+// Database connection test endpoint with actual implementation
 app.post('/api/database/test', async (req, res) => {
     try {
         const { database } = req.body;
         
-        // Simulate database connection test
-        // In real implementation, this would actually test the connection
-        const success = Math.random() > 0.3; // 70% success rate for demo
+        // Create a database tester module
+        const { DatabaseTester } = require('../core/database-tester');
+        const tester = new DatabaseTester();
         
-        if (success) {
-            res.json({ 
-                success: true, 
-                result: { 
-                    connected: true, 
-                    message: 'データベース接続に成功しました',
-                    responseTime: Math.floor(Math.random() * 100) + 50
-                }
-            });
-        } else {
-            res.json({ 
-                success: true, 
-                result: { 
-                    connected: false, 
-                    message: '接続に失敗しました。設定を確認してください。'
-                }
-            });
-        }
+        const result = await tester.testConnection(database);
+        
+        res.json({ 
+            success: true, 
+            result 
+        });
     } catch (error) {
         res.status(500).json({ 
             success: false, 

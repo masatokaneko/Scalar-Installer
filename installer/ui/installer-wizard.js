@@ -470,63 +470,170 @@ class InstallerWizard {
     }
     
     async checkJavaEnvironment() {
-        // Simulate Java environment check
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                this.installConfig.java.version = '17.0.8';
-                this.installConfig.java.vendor = 'Eclipse Temurin';
-                resolve();
-            }, 500);
-        });
+        try {
+            const response = await fetch('/api/java/check');
+            const data = await response.json();
+            
+            if (data.success && data.result.installed) {
+                this.installConfig.java = {
+                    version: data.result.version,
+                    vendor: data.result.vendor || 'Unknown',
+                    home: data.result.home
+                };
+            } else {
+                throw new Error('Javaがインストールされていません');
+            }
+        } catch (error) {
+            throw new Error(`Java環境の確認に失敗: ${error.message}`);
+        }
     }
     
     async downloadScalarDB() {
-        // Simulate ScalarDB download
-        return new Promise((resolve) => {
-            setTimeout(() => {
+        try {
+            const response = await fetch('/api/scalardb/install', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    installType: this.installConfig.installType,
+                    version: this.installConfig.scalardb?.version || 'latest',
+                    projectPath: this.installConfig.projectPath || '/tmp/scalardb-install',
+                    product: this.installConfig.product
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
                 this.installConfig.scalardb = {
-                    version: '3.16.0',
-                    type: 'jar'
+                    version: data.result.version || '3.16.0',
+                    type: data.result.type || 'jar',
+                    location: data.result.location
                 };
-                resolve();
-            }, 1500);
-        });
+            } else {
+                throw new Error(data.error || 'ScalarDBのダウンロードに失敗しました');
+            }
+        } catch (error) {
+            throw new Error(`ScalarDBのダウンロードエラー: ${error.message}`);
+        }
     }
     
     async generateConfiguration() {
-        // Simulate configuration generation
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                this.installConfig.configFiles = [
-                    'database.properties',
-                    'schema.json'
-                ];
-                if (this.installConfig.deployment === 'docker') {
+        try {
+            // database.propertiesの生成
+            const dbPropsResponse = await fetch('/api/config/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    config: {
+                        database: this.installConfig.database,
+                        transaction: this.installConfig.transaction || {
+                            manager: 'consensus-commit',
+                            isolationLevel: 'SNAPSHOT'
+                        }
+                    },
+                    type: 'database-properties'
+                })
+            });
+            
+            const dbPropsData = await dbPropsResponse.json();
+            if (!dbPropsData.success) {
+                throw new Error('database.propertiesの生成に失敗');
+            }
+            
+            this.installConfig.configFiles = ['database.properties'];
+            
+            // Docker Composeの生成（必要な場合）
+            if (this.installConfig.deployment === 'docker') {
+                const dockerResponse = await fetch('/api/config/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        config: {
+                            database: this.installConfig.database,
+                            scalardb: this.installConfig.scalardb
+                        },
+                        type: 'docker-compose'
+                    })
+                });
+                
+                const dockerData = await dockerResponse.json();
+                if (dockerData.success) {
                     this.installConfig.configFiles.push('docker-compose.yml');
                 }
-                resolve();
-            }, 800);
-        });
+            }
+            
+            this.installConfig.generatedConfigs = {
+                databaseProperties: dbPropsData.content
+            };
+        } catch (error) {
+            throw new Error(`設定ファイルの生成エラー: ${error.message}`);
+        }
     }
     
     async executeInstallation() {
-        // Simulate installation execution
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                this.installConfig.installPath = '/usr/local/scalardb';
-                resolve();
-            }, 2000);
-        });
+        try {
+            // 設定ファイルを保存
+            const configDir = this.installConfig.projectPath || '/tmp/scalardb-config';
+            
+            const saveResponse = await fetch('/api/config/save-all', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    installConfig: this.installConfig,
+                    outputDir: configDir
+                })
+            });
+            
+            const saveData = await saveResponse.json();
+            
+            if (!saveData.success) {
+                throw new Error('設定ファイルの保存に失敗しました');
+            }
+            
+            this.installConfig.installPath = configDir;
+            this.installConfig.savedFiles = saveData.results;
+            
+            // 実際のインストール処理（将来的にここに追加）
+            // - ScalarDB Serverの起動
+            // - Dockerコンテナの起動
+            // - systemdサービスの作成など
+            
+        } catch (error) {
+            throw new Error(`インストール実行エラー: ${error.message}`);
+        }
     }
     
     async verifyDatabaseConnection() {
-        // Simulate database connection verification
-        return new Promise((resolve) => {
-            setTimeout(() => {
+        try {
+            const response = await fetch('/api/database/test', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    database: this.installConfig.database
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success && data.result.connected) {
                 this.installConfig.dbConnectionVerified = true;
-                resolve();
-            }, 1000);
-        });
+                this.installConfig.dbResponseTime = data.result.responseTime;
+            } else {
+                throw new Error(data.result?.message || 'データベース接続に失敗しました');
+            }
+        } catch (error) {
+            throw new Error(`データベース接続エラー: ${error.message}`);
+        }
     }
     
     async finalizeInstallation() {
@@ -573,6 +680,12 @@ class InstallerWizard {
                 <span>設定ファイル:</span>
                 <span>${config.configFiles?.join(', ')}</span>
             </div>
+            ${config.savedFiles ? `
+            <div class="detail-item">
+                <span>保存されたファイル:</span>
+                <span>${config.savedFiles.map(f => f.path || f).join('<br>')}</span>
+            </div>
+            ` : ''}
             <div class="detail-item">
                 <span>完了時刻:</span>
                 <span>${new Date(config.installationTime).toLocaleString()}</span>
