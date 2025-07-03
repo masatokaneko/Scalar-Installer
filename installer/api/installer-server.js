@@ -8,6 +8,7 @@ const { ConfigGenerator } = require('../core/config-generator');
 const { PrerequisitesInstaller } = require('../core/prerequisites-installer');
 const { SchemaManager } = require('../core/schema-manager');
 const { WebSocketServer } = require('../core/websocket-server');
+const { DockerDeployer } = require('../core/docker-deployer');
 
 const app = express();
 const port = 3002;
@@ -26,6 +27,7 @@ const scalardbInstaller = new ScalarDBInstaller();
 const configGenerator = new ConfigGenerator();
 const prerequisitesInstaller = new PrerequisitesInstaller();
 const schemaManager = new SchemaManager();
+const dockerDeployer = new DockerDeployer();
 
 // WebSocketサーバーを初期化
 const wsServer = new WebSocketServer(httpServer);
@@ -461,6 +463,107 @@ app.get('/api/install/progress/:id', (req, res) => {
     }
 });
 
+// Docker関連エンドポイント
+app.post('/api/docker/deploy', async (req, res) => {
+    try {
+        const { config, useCompose = true } = req.body;
+        
+        // Dockerが利用可能か確認
+        const dockerCheck = await dockerDeployer.checkDockerInstalled();
+        if (!dockerCheck.installed) {
+            return res.status(400).json({
+                success: false,
+                error: 'Dockerがインストールされていません'
+            });
+        }
+        
+        if (!dockerCheck.running) {
+            return res.status(400).json({
+                success: false,
+                error: 'Dockerデーモンが実行されていません'
+            });
+        }
+        
+        let result;
+        
+        if (useCompose && config.deployment === 'docker') {
+            // Docker Compose設定を生成
+            const compose = await dockerDeployer.generateDockerCompose(config);
+            const outputPath = config.projectPath || '/tmp/scalardb-docker';
+            
+            // Docker Composeファイルを保存
+            await configGenerator.saveConfiguration(
+                compose,
+                'docker-compose',
+                path.join(outputPath, 'docker-compose.yml')
+            );
+            
+            // Docker Composeでデプロイ
+            result = await dockerDeployer.deployWithDockerCompose(outputPath);
+        } else {
+            // 単一コンテナとしてデプロイ
+            result = await dockerDeployer.deployScalarDBContainer(config);
+        }
+        
+        res.json({ success: result.success, result });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+app.get('/api/docker/status/:containerName', async (req, res) => {
+    try {
+        const { containerName } = req.params;
+        const health = await dockerDeployer.checkContainerHealth(containerName);
+        
+        res.json({ success: true, health });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+app.get('/api/docker/logs/:containerName', async (req, res) => {
+    try {
+        const { containerName } = req.params;
+        const { lines = 100 } = req.query;
+        
+        const result = await dockerDeployer.getContainerLogs(containerName, parseInt(lines));
+        
+        if (result.success) {
+            res.json({ success: true, logs: result.logs });
+        } else {
+            res.status(500).json({ 
+                success: false, 
+                error: result.error 
+            });
+        }
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+app.post('/api/docker/stop-all', async (req, res) => {
+    try {
+        const result = await dockerDeployer.stopAllContainers();
+        
+        res.json({ success: result.success, result });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
 // Real installation process with WebSocket notifications
 async function executeRealInstallation(installationId, config) {
     const progress = global.installationProgress[installationId];
@@ -570,12 +673,45 @@ async function executeRealInstallation(installationId, config) {
             }
         }
         
+        // Step 6: Dockerデプロイメント（オプション）
+        if (config.deployment === 'docker') {
+            wsServer.updateProgress(installationId, {
+                step: 'Dockerコンテナの起動',
+                progress: 98,
+                status: 'running'
+            });
+            
+            try {
+                const dockerResult = await dockerDeployer.deployScalarDBContainer(config);
+                
+                if (dockerResult.success) {
+                    wsServer.updateProgress(installationId, {
+                        step: 'Dockerコンテナの起動',
+                        progress: 99,
+                        status: 'completed',
+                        message: 'ScalarDBコンテナが起動しました'
+                    });
+                } else {
+                    wsServer.sendLog(installationId, {
+                        level: 'warning',
+                        message: `Docker起動をスキップ: ${dockerResult.message}`
+                    });
+                }
+            } catch (error) {
+                wsServer.sendLog(installationId, {
+                    level: 'warning',
+                    message: `Docker起動エラー: ${error.message}`
+                });
+            }
+        }
+        
         // インストール完了
         const result = {
             success: true,
             installPath: config.installPath || '/usr/local/scalardb',
             configFiles: ['database.properties'],
-            version: installResult.version || '3.16.0'
+            version: installResult.version || '3.16.0',
+            deployment: config.deployment
         };
         
         progress.status = 'completed';
