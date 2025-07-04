@@ -1725,8 +1725,8 @@ function openDashboardDirect() {
     }
 }
 
-// Then use this function in your button:
-content += '<button class="btn" onclick="openDashboardDirect()" style="margin: 4px;">🌐 Open Dashboard</button>';
+// Note: This line was causing "content is not defined" error and has been removed
+// The button is already added in the showQuickAccess function above
 
         // Quick dashboard startup
         async function startQuickDashboard() {

@@ -267,6 +267,10 @@ class InstallerWizard {
         switch (db.type) {
             case 'postgresql':
             case 'mysql':
+                // ポート番号を整数に変換
+                if (db.port && typeof db.port === 'string') {
+                    db.port = parseInt(db.port, 10);
+                }
                 return db.host && db.port && db.username && db.password && db.database;
             case 'cassandra':
                 return db.hosts && db.port && db.username && db.password;
@@ -284,6 +288,11 @@ class InstallerWizard {
         const dbType = this.installConfig.database.type;
         
         let formHTML = '';
+        
+        // フォーム変更時にデータを保存するイベントリスナーを後で追加
+        setTimeout(() => {
+            this.attachFormEventListeners();
+        }, 100);
         
         switch (dbType) {
             case 'postgresql':
@@ -761,6 +770,52 @@ class InstallerWizard {
         entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
         container.appendChild(entry);
         container.scrollTop = container.scrollHeight;
+    }
+    
+    attachFormEventListeners() {
+        const configForm = document.getElementById('config-form');
+        if (!configForm) return;
+        
+        // すべての入力フィールドにイベントリスナーを追加
+        configForm.querySelectorAll('input, select, textarea').forEach(input => {
+            input.addEventListener('change', (e) => {
+                const name = e.target.name;
+                const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+                
+                // データベース設定を更新
+                if (name && value !== undefined) {
+                    this.installConfig.database[name] = value;
+                    console.log(`Updated database.${name} = ${value}`);
+                }
+            });
+            
+            // リアルタイム入力にも対応
+            if (input.type === 'text' || input.type === 'password' || input.type === 'number') {
+                input.addEventListener('input', (e) => {
+                    const name = e.target.name;
+                    const value = e.target.value;
+                    
+                    if (name) {
+                        this.installConfig.database[name] = value;
+                    }
+                });
+            }
+        });
+        
+        // 詳細設定のフィールドも処理
+        configForm.querySelectorAll('.advanced-form input, .advanced-form select').forEach(input => {
+            input.addEventListener('change', (e) => {
+                const name = e.target.name;
+                const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+                
+                if (!this.installConfig.advanced) {
+                    this.installConfig.advanced = {};
+                }
+                
+                this.installConfig.advanced[name] = value;
+                console.log(`Updated advanced.${name} = ${value}`);
+            });
+        });
     }
     
     generateCompletionInfo() {
