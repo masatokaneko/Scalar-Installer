@@ -9,6 +9,7 @@ const { PrerequisitesInstaller } = require('../core/prerequisites-installer');
 const { SchemaManager } = require('../core/schema-manager');
 const { WebSocketServer } = require('../core/websocket-server');
 const { DockerDeployer } = require('../core/docker-deployer');
+const { ScalarDBDownloader } = require('../core/scalardb-downloader');
 
 const app = express();
 const port = 3002;
@@ -28,6 +29,7 @@ const configGenerator = new ConfigGenerator();
 const prerequisitesInstaller = new PrerequisitesInstaller();
 const schemaManager = new SchemaManager();
 const dockerDeployer = new DockerDeployer();
+const scalardbDownloader = new ScalarDBDownloader();
 
 // WebSocketサーバーを初期化
 const wsServer = new WebSocketServer(httpServer);
@@ -211,10 +213,28 @@ app.get('/api/scalardb/check', async (req, res) => {
     }
 });
 
+// 新しいエンドポイント: 実際のバージョン一覧取得
 app.get('/api/scalardb/versions', async (req, res) => {
     try {
-        const { product = 'scalardb' } = req.query;
-        const versions = await scalardbInstaller.getAvailableVersions(product);
+        const versions = await scalardbDownloader.getAvailableVersions();
+        const latest = await scalardbDownloader.getLatestVersion();
+        res.json({ 
+            success: true, 
+            versions,
+            latest 
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+// 新しいエンドポイント: ダウンロード済みバージョン確認
+app.get('/api/scalardb/downloaded', async (req, res) => {
+    try {
+        const versions = await scalardbDownloader.getDownloadedVersions();
         res.json({ success: true, versions });
     } catch (error) {
         res.status(500).json({ 
@@ -224,6 +244,48 @@ app.get('/api/scalardb/versions', async (req, res) => {
     }
 });
 
+// 新しいエンドポイント: ScalarDBダウンロード
+app.post('/api/scalardb/download', async (req, res) => {
+    try {
+        const { version } = req.body;
+        
+        if (!version) {
+            return res.status(400).json({
+                success: false,
+                error: 'バージョンが指定されていません'
+            });
+        }
+        
+        // 既にダウンロード済みか確認
+        const isDownloaded = await scalardbDownloader.isVersionDownloaded(version);
+        if (isDownloaded) {
+            return res.json({
+                success: true,
+                message: '既にダウンロード済みです',
+                version,
+                downloaded: true
+            });
+        }
+        
+        // WebSocketで進捗を送信するコールバック
+        const progressCallback = (progress) => {
+            wsServer.sendLog('scalardb-download', {
+                level: 'info',
+                message: `ダウンロード進捗: ${Math.round(progress)}%`
+            });
+        };
+        
+        const result = await scalardbDownloader.downloadVersion(version, progressCallback);
+        res.json({ success: true, result });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+// 既存のinstallエンドポイント（モック）は残す
 app.post('/api/scalardb/install', async (req, res) => {
     try {
         const config = req.body;
