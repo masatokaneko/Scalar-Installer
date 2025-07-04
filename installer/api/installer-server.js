@@ -10,6 +10,7 @@ const { SchemaManager } = require('../core/schema-manager');
 const { WebSocketServer } = require('../core/websocket-server');
 const { DockerDeployer } = require('../core/docker-deployer');
 const { ScalarDBDownloader } = require('../core/scalardb-downloader');
+const { PostgreSQLAutoInstaller } = require('../core/postgresql-auto-installer');
 
 const app = express();
 const port = 3002;
@@ -30,6 +31,7 @@ const prerequisitesInstaller = new PrerequisitesInstaller();
 const schemaManager = new SchemaManager();
 const dockerDeployer = new DockerDeployer();
 const scalardbDownloader = new ScalarDBDownloader();
+const postgresqlAutoInstaller = new PostgreSQLAutoInstaller();
 
 // WebSocketサーバーを初期化
 const wsServer = new WebSocketServer(httpServer);
@@ -462,6 +464,76 @@ app.post('/api/database/test', async (req, res) => {
             success: true, 
             result 
         });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+// PostgreSQL自動インストールエンドポイント
+app.post('/api/database/postgresql/install', async (req, res) => {
+    try {
+        const { reuseExisting = false } = req.body;
+        
+        // WebSocketで進捗を送信
+        const progressCallback = (progress) => {
+            wsServer.sendLog('postgresql-install', {
+                level: 'info',
+                step: progress.step,
+                progress: progress.progress,
+                message: progress.message
+            });
+        };
+        
+        const result = await postgresqlAutoInstaller.install({
+            progressCallback,
+            reuseExisting
+        });
+        
+        res.json({ success: true, result });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            error: error.message,
+            userMessage: error.userMessage,
+            actionLink: error.actionLink
+        });
+    }
+});
+
+// PostgreSQL状態確認エンドポイント
+app.get('/api/database/postgresql/status', async (req, res) => {
+    try {
+        const status = await postgresqlAutoInstaller.checkExistingContainer();
+        res.json({ success: true, status });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+// PostgreSQL停止エンドポイント
+app.post('/api/database/postgresql/stop', async (req, res) => {
+    try {
+        const result = await postgresqlAutoInstaller.stop();
+        res.json({ success: true, result });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+// PostgreSQL削除エンドポイント
+app.post('/api/database/postgresql/remove', async (req, res) => {
+    try {
+        const result = await postgresqlAutoInstaller.remove();
+        res.json({ success: true, result });
     } catch (error) {
         res.status(500).json({ 
             success: false, 
