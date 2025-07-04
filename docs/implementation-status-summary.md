@@ -5,9 +5,9 @@
 ## 🎯 プロジェクトゴール
 非エンジニアがボタンをクリックするだけで、ScalarDBの完全なセットアップを実現する。
 
-## 📊 全体進捗率: 44.6%
+## 📊 全体進捗率: 54.3%
 
-### ✅ 完了（41機能）
+### ✅ 完了（50機能）
 - 基本的なWebUIとAPIサーバー
 - 環境チェック機能（Java、Docker等の検出）
 - データベース接続テスト（5種類のDB対応）
@@ -16,13 +16,14 @@
 - Dockerコンテナデプロイメント基盤
 - **ScalarDB自動ダウンローダー**（新機能）
 - **PostgreSQL Docker自動インストーラー**（新機能）
+- **MySQL Docker自動インストーラー**（新機能）
 
 ### 🚧 実装中（1機能）
-- MySQL Docker自動インストーラー
+- Cassandra Docker自動インストーラー（次の優先項目）
 
-### ❌ 未実装（50機能）
+### ❌ 未実装（41機能）
 - 依存ライブラリの自動解決
-- MySQL/Cassandra/DynamoDB/Cosmos DBの自動インストール
+- Cassandra/DynamoDB/Cosmos DBの自動インストール
 - Windows/LinuxでのJava自動インストール
 - 統合管理ダッシュボード
 

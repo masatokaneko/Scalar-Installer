@@ -11,6 +11,7 @@ const { WebSocketServer } = require('../core/websocket-server');
 const { DockerDeployer } = require('../core/docker-deployer');
 const { ScalarDBDownloader } = require('../core/scalardb-downloader');
 const { PostgreSQLAutoInstaller } = require('../core/postgresql-auto-installer');
+const { MySQLAutoInstaller } = require('../core/mysql-auto-installer');
 
 const app = express();
 const port = 3002;
@@ -32,6 +33,7 @@ const schemaManager = new SchemaManager();
 const dockerDeployer = new DockerDeployer();
 const scalardbDownloader = new ScalarDBDownloader();
 const postgresqlAutoInstaller = new PostgreSQLAutoInstaller();
+const mysqlAutoInstaller = new MySQLAutoInstaller();
 
 // WebSocketサーバーを初期化
 const wsServer = new WebSocketServer(httpServer);
@@ -533,6 +535,76 @@ app.post('/api/database/postgresql/stop', async (req, res) => {
 app.post('/api/database/postgresql/remove', async (req, res) => {
     try {
         const result = await postgresqlAutoInstaller.remove();
+        res.json({ success: true, result });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+// MySQL自動インストールエンドポイント
+app.post('/api/database/mysql/install', async (req, res) => {
+    try {
+        const { reuseExisting = false } = req.body;
+        
+        // WebSocketで進捗を送信
+        const progressCallback = (progress) => {
+            wsServer.sendLog('mysql-install', {
+                level: 'info',
+                step: progress.step,
+                progress: progress.progress,
+                message: progress.message
+            });
+        };
+        
+        const result = await mysqlAutoInstaller.install({
+            progressCallback,
+            reuseExisting
+        });
+        
+        res.json({ success: true, result });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            error: error.message,
+            userMessage: error.userMessage,
+            actionLink: error.actionLink
+        });
+    }
+});
+
+// MySQL状態確認エンドポイント
+app.get('/api/database/mysql/status', async (req, res) => {
+    try {
+        const status = await mysqlAutoInstaller.checkExistingContainer();
+        res.json({ success: true, status });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+// MySQL停止エンドポイント
+app.post('/api/database/mysql/stop', async (req, res) => {
+    try {
+        const result = await mysqlAutoInstaller.stop();
+        res.json({ success: true, result });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            error: error.message 
+        });
+    }
+});
+
+// MySQL削除エンドポイント
+app.post('/api/database/mysql/remove', async (req, res) => {
+    try {
+        const result = await mysqlAutoInstaller.remove();
         res.json({ success: true, result });
     } catch (error) {
         res.status(500).json({ 
