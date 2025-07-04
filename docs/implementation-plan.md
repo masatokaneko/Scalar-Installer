@@ -36,7 +36,7 @@ ScalarDB Installerは、ScalarDBおよびScalarDLを簡単にセットアップ�
 
 ## 3. 現在の実装状況
 
-### ✅ 完了済み機能
+### ✅ 完了済み機能（更新: 2025/01/04）
 
 #### 3.1 基本インフラ
 - ✅ Express.jsベースのAPIサーバー
@@ -70,6 +70,26 @@ ScalarDB Installerは、ScalarDBおよびScalarDLを簡単にセットアップ�
 - ✅ コンテナ健全性チェック
 - ✅ コンテナログ取得
 
+#### 3.7 ScalarDB自動ダウンローダー（新機能）
+- ✅ Maven Central API連携
+- ✅ 利用可能バージョン一覧取得
+- ✅ 最新バージョン自動検出
+- ✅ JARファイルの自動ダウンロード
+- ✅ ダウンロード進捗表示
+- ✅ SHA-1チェックサム検証
+- ✅ ユーザーフレンドリーエラーメッセージ
+
+#### 3.8 PostgreSQL Docker自動インストーラー（新機能）
+- ✅ Docker環境チェックとエラーガイダンス
+- ✅ PostgreSQLイメージの自動pull
+- ✅ コンテナの自動作成・起動
+- ✅ ポート競合の自動検出と回避
+- ✅ セキュアなパスワード自動生成
+- ✅ 初期データベース・ユーザー作成
+- ✅ 既存コンテナの検出と再利用
+- ✅ ヘルスチェック（pg_isready使用）
+- ✅ ユーザーフレンドリーエラーメッセージ
+
 #### 3.6 UI/UX基本機能
 - ✅ 6ステップウィザード
 - ✅ リアルタイム進捗表示（WebSocket）
@@ -78,44 +98,40 @@ ScalarDB Installerは、ScalarDBおよびScalarDLを簡単にセットアップ�
 
 ### 🚧 実装中の機能
 
-#### 3.7 自動インストール機能
-- 🚧 Java自動インストール
-  - ✅ macOS: Homebrew経由実装済み
-  - ❌ Windows: 未実装
-  - ❌ Linux: 未実装
-- 🚧 フォーム入力値の保存（修正中）
+#### 3.9 Java自動インストール
+- ✅ macOS: Homebrew経由実装済み
+- 🚧 Windows: 開発中
+- ❌ Linux: 未実装
+
+#### 3.10 MySQL Docker自動インストーラー
+- 🚧 開発中（PostgreSQLベースで実装予定）
 
 ### ❌ 未実装機能
 
-#### 3.8 ScalarDB本体の自動化
-- ❌ Maven Central APIとの連携
-- ❌ JARファイルの自動ダウンロード
-- ❌ バージョン選択UI
+#### 3.11 ScalarDB拡張機能
 - ❌ 依存ライブラリの自動解決
 - ❌ CLIツールのセットアップ
+- ❌ 実行権限の自動設定
 
-#### 3.9 データベース自動インストール
-- ❌ PostgreSQL自動インストール（Docker/ネイティブ）
+#### 3.12 その他のデータベース自動インストール
 - ❌ MySQL自動インストール（Docker/ネイティブ）
 - ❌ Cassandra自動インストール（Docker）
 - ❌ DynamoDB Local自動セットアップ
 - ❌ Cosmos DB Emulator自動インストール
-- ❌ 初期データベース/ユーザー作成
-- ❌ 接続情報の自動入力
 
-#### 3.10 環境設定の完全自動化
-- ❌ JAVA_HOME自動設定（全OS）
-- ❌ PATH自動設定（全OS）
+#### 3.13 環境設定の完全自動化
+- ❌ JAVA_HOME自動設定（Windows/Linux）
+- ❌ PATH自動設定（Windows/Linux）
 - ❌ Docker Desktop自動インストールガイド
 - ❌ 環境変数の永続化
 
-#### 3.11 エラーハンドリング改善
-- ❌ 非技術者向けエラーメッセージ
+#### 3.14 エラーハンドリング改善
+- ✅ 非技術者向けエラーメッセージ（PostgreSQL関連）
 - ❌ 自動リトライ機能
 - ❌ ロールバック機能
 - ❌ トラブルシューティングウィザード
 
-#### 3.12 統合管理機能（Phase 2）
+#### 3.15 統合管理機能（Phase 2）
 - ❌ 統合ダッシュボード
 - ❌ ワンクリック起動/停止
 - ❌ リソースモニタリング
@@ -128,14 +144,24 @@ ScalarDB Installerは、ScalarDBおよびScalarDLを簡単にセットアップ�
    - Eclipse Temurin JDK 17
    - Homebrew経由でのインストール
 
-2. **設定ファイル**
+2. **ScalarDB本体**（新機能）
+   - Maven Centralからの自動ダウンロード
+   - バージョン選択機能
+   - SHA-1チェックサム検証
+
+3. **PostgreSQLデータベース**（新機能）
+   - Docker経由での完全自動インストール
+   - 初期データベース・ユーザー作成
+   - セキュアなパスワード自動生成
+
+4. **設定ファイル**
    - database.properties
    - docker-compose.yml
 
-3. **データベーススキーマ**
+5. **データベーススキーマ**
    - PostgreSQL、MySQL、Cassandra用のテーブル作成
 
-4. **Dockerコンテナ**
+6. **Dockerコンテナ**
    - ScalarDBサーバーコンテナ
    - データベースコンテナ（PostgreSQL、MySQL、Cassandra）
 
@@ -144,10 +170,9 @@ ScalarDB Installerは、ScalarDBおよびScalarDLを簡単にセットアップ�
    - Windows: Chocolatey経由
    - Linux: apt/yum経由
 
-2. **ScalarDB本体**
-   - Maven Central Repositoryからの直接ダウンロード
-   - バージョン選択機能
-   - アップグレード機能
+2. **MySQL/Cassandraデータベース**
+   - Docker経由での自動インストール
+   - 初期設定の完全自動化
 
 3. **関連ツール**
    - ScalarDB Schema Loader
@@ -239,7 +264,8 @@ ScalarDB Installerは、ScalarDBおよびScalarDLを簡単にセットアップ�
    - 一部のコマンドはUnix系OSを前提
 
 2. **データベース要件**
-   - 接続テストには実際のデータベースが必要
+   - PostgreSQLは完全自動インストール可能
+   - MySQL、Cassandra等は引き続き手動セットアップが必要
    - クラウドサービス（DynamoDB、Cosmos DB）は認証情報が必要
 
 3. **ネットワーク要件**
