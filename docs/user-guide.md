@@ -72,7 +72,10 @@ http://localhost:3002/installer/ui/installer-wizard.html
 
 #### Java環境
 - **必須**: OpenJDK 8, 11, 17, または 21
-- **自動インストール**: macOSではHomebrew経由で自動インストール可能
+- **自動インストール**: 
+  - ✅ macOS: Homebrew経由で自動インストール可能
+  - ❌ Windows: 未実装（手動インストールが必要）
+  - ❌ Linux: 未実装（手動インストールが必要）
 - **手動インストール**: 
   ```bash
   # macOS
@@ -83,6 +86,9 @@ http://localhost:3002/installer/ui/installer-wizard.html
   
   # CentOS/RHEL
   sudo yum install java-17-openjdk
+  
+  # Windows
+  # OpenJDKのMSIインストーラーをダウンロードして実行
   ```
 
 #### Docker（オプション）
@@ -136,6 +142,12 @@ http://localhost:3002/installer/ui/installer-wizard.html
 ![Database Configuration](./images/step4-configuration.png)
 
 #### PostgreSQL/MySQL設定
+
+**現在の状況**:
+- ⚠️ **重要**: 現在、データベースは事前にインストールされている必要があります
+- ❌ 自動インストール機能は未実装（開発中）
+
+**手動セットアップが必要な項目**:
 ```
 ホスト: localhost
 ポート: 5432 (PostgreSQL) / 3306 (MySQL)
@@ -143,6 +155,11 @@ http://localhost:3002/installer/ui/installer-wizard.html
 パスワード: your_password
 データベース: scalardb
 ```
+
+**今後実装予定の自動インストール**:
+- 「PostgreSQLをインストール」ボタンでDocker経由で自動セットアップ
+- データベース、ユーザー、パスワードの自動生成
+- 接続情報の自動入力
 
 #### Cassandra設定
 ```

@@ -39,67 +39,87 @@ ScalarDB Installerは、ScalarDBおよびScalarDLを簡単にセットアップ�
 ### ✅ 完了済み機能
 
 #### 3.1 基本インフラ
-- [x] Express.jsベースのAPIサーバー
-- [x] WebベースのUIウィザード
-- [x] Socket.IOによるWebSocket通信
-- [x] 設定ファイルの生成と保存
+- ✅ Express.jsベースのAPIサーバー
+- ✅ WebベースのUIウィザード
+- ✅ Socket.IOによるWebSocket通信
+- ✅ 設定ファイルの生成と保存
 
 #### 3.2 環境チェック機能
-- [x] Java環境の検出（バージョン、ベンダー、JAVA_HOME）
-- [x] Dockerの検出と実行状態確認
-- [x] Maven/Gradleの検出
-- [x] Homebrewの検出（macOS）
+- ✅ Java環境の検出（バージョン、ベンダー、JAVA_HOME）
+- ✅ Dockerの検出と実行状態確認
+- ✅ Maven/Gradleの検出
+- ✅ Homebrewの検出（macOS）
 
 #### 3.3 データベース機能
-- [x] PostgreSQL接続テスト
-- [x] MySQL接続テスト
-- [x] Cassandra接続テスト（基本実装）
-- [x] DynamoDB接続テスト（AWS SDK使用）
-- [x] Cosmos DB接続テスト（Azure SDK使用）
-- [x] スキーマ自動作成機能
+- ✅ PostgreSQL接続テスト
+- ✅ MySQL接続テスト
+- ✅ Cassandra接続テスト（基本実装）
+- ✅ DynamoDB接続テスト（AWS SDK使用）
+- ✅ Cosmos DB接続テスト（Azure SDK使用）
+- ✅ スキーマ自動作成機能
 
 #### 3.4 設定管理
-- [x] database.properties生成
-- [x] Docker Compose設定生成
-- [x] 設定ファイルの検証
+- ✅ database.properties生成
+- ✅ Docker Compose設定生成
+- ✅ 設定ファイルの検証
+- ✅ 設定ファイルの保存
 
 #### 3.5 Docker統合
-- [x] Dockerコンテナとしてのデプロイ
-- [x] Docker Compose設定の自動生成
-- [x] コンテナ健全性チェック
-- [x] コンテナログ取得
+- ✅ Dockerコンテナとしてのデプロイ
+- ✅ Docker Compose設定の自動生成
+- ✅ コンテナ健全性チェック
+- ✅ コンテナログ取得
 
-### ⚠️ 部分的に実装済み
+#### 3.6 UI/UX基本機能
+- ✅ 6ステップウィザード
+- ✅ リアルタイム進捗表示（WebSocket）
+- ✅ エラー通知機能
+- ✅ 接続テスト結果表示
 
-#### 3.6 自動インストール機能
-- [△] Java自動インストール（macOSのみ実装）
-  - macOS: Homebrew経由でEclipse Temurinをインストール
-  - Windows: 未実装
-  - Linux: 未実装
-- [△] Docker自動インストール（基本実装のみ）
-  - インストールスクリプトは存在するが、テストが不十分
+### 🚧 実装中の機能
 
-#### 3.7 ScalarDB本体のインストール
-- [△] JARファイルのダウンロード（モック実装）
-- [△] バージョン管理（固定バージョンのみ）
+#### 3.7 自動インストール機能
+- 🚧 Java自動インストール
+  - ✅ macOS: Homebrew経由実装済み
+  - ❌ Windows: 未実装
+  - ❌ Linux: 未実装
+- 🚧 フォーム入力値の保存（修正中）
 
 ### ❌ 未実装機能
 
-#### 3.8 本番環境対応
-- [ ] Kubernetesデプロイメント
-- [ ] 高可用性設定
-- [ ] クラスター構成
-- [ ] バックアップ/リストア機能
+#### 3.8 ScalarDB本体の自動化
+- ❌ Maven Central APIとの連携
+- ❌ JARファイルの自動ダウンロード
+- ❌ バージョン選択UI
+- ❌ 依存ライブラリの自動解決
+- ❌ CLIツールのセットアップ
 
-#### 3.9 セキュリティ機能
-- [ ] SSL/TLS設定
-- [ ] 認証・認可設定
-- [ ] セキュリティベストプラクティスの自動適用
+#### 3.9 データベース自動インストール
+- ❌ PostgreSQL自動インストール（Docker/ネイティブ）
+- ❌ MySQL自動インストール（Docker/ネイティブ）
+- ❌ Cassandra自動インストール（Docker）
+- ❌ DynamoDB Local自動セットアップ
+- ❌ Cosmos DB Emulator自動インストール
+- ❌ 初期データベース/ユーザー作成
+- ❌ 接続情報の自動入力
 
-#### 3.10 監視・運用機能
-- [ ] メトリクス収集設定
-- [ ] ログ管理設定
-- [ ] アラート設定
+#### 3.10 環境設定の完全自動化
+- ❌ JAVA_HOME自動設定（全OS）
+- ❌ PATH自動設定（全OS）
+- ❌ Docker Desktop自動インストールガイド
+- ❌ 環境変数の永続化
+
+#### 3.11 エラーハンドリング改善
+- ❌ 非技術者向けエラーメッセージ
+- ❌ 自動リトライ機能
+- ❌ ロールバック機能
+- ❌ トラブルシューティングウィザード
+
+#### 3.12 統合管理機能（Phase 2）
+- ❌ 統合ダッシュボード
+- ❌ ワンクリック起動/停止
+- ❌ リソースモニタリング
+- ❌ ログビューアー
 
 ## 4. インストール可能なコンポーネント
 
